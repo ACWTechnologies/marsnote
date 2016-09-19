@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PublishUrlHistory>ftp://ftp.acwtechnologies.co.uk/public_html/download/MarsNote/|ftp://ftp.acwtechnologies.co.uk/public_html/download/MarsNote-Beta/|ftp://ftp.acwtechnologies.co.uk/public_html/download/Jarvis Lite/|publish\</PublishUrlHistory>
+    <InstallUrlHistory>http://www.download.acwtechnologies.co.uk/MarsNote/|http://www.download.acwtechnologies.co.uk/MarsNote-Beta/</InstallUrlHistory>
+    <SupportUrlHistory>http://acwtechnologies.co.uk/contact-us</SupportUrlHistory>
+    <UpdateUrlHistory />
+    <BootstrapperUrlHistory />
+    <ErrorReportUrlHistory>http://acwtechnologies.co.uk/contact-us</ErrorReportUrlHistory>
+    <FallbackCulture>en-US</FallbackCulture>
+    <VerifyUploadedFiles>true</VerifyUploadedFiles>
+  </PropertyGroup>
+</Project>
