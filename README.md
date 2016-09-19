@@ -6,6 +6,7 @@ A note taking application designed for simplicity, speed and customisability.
 - [Homepage](http://acwtechnologies.co.uk/software/marsnote)
 - [License](LICENSE.txt)
 - [Patch Notes](http://acwtechnologies.co.uk/software/marsnote#patch-notes)
+- [Issues](https://github.com/ACWTechnologiesAdmin/MarsNote/issues)
 
 <hr>
 
