@@ -1,7 +1,9 @@
 # MarsNote
 A note taking application designed for simplicity, speed and customisability.
 
-*Developed by [ACW Technologies](http://acwtechnologies.co.uk/software/marsnote)*
+[![ACW Technologies](https://img.shields.io/badge/Developed%20by-ACW%20Technologies-orange.svg?style=flat-square)](http://acwtechnologies.co.uk/software/marsnote)
+
+[![GitHub issues](https://img.shields.io/github/issues/ACWTechnologiesAdmin/MarsNote.svg?style=flat-square)](https://github.com/ACWTechnologiesAdmin/MarsNote/issues)
 
 - [Homepage](http://acwtechnologies.co.uk/software/marsnote)
 - [License](LICENSE.txt)
