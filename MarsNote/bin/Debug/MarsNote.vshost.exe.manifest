@@ -55,14 +55,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="MarsNote.exe" size="2679752">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="MarsNote.exe" size="2678216">
       <assemblyIdentity name="MarsNote" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>/DIj00iLL7ievsyMFmZhD5Z5hCu8p+0rZHbW1YHO/jE=</dsig:DigestValue>
+        <dsig:DigestValue>5g4rhCUt4LkbRWYzS3w5kVBIMfMHyO2LrLUaDRV39nM=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
