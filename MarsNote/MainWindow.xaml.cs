@@ -291,6 +291,7 @@ namespace MarsNote
                         if (state.Folder == folder.Name)
                         {
                             listBox_folders.SelectedItem = folder;
+                            listBox_folders.ScrollIntoView(folder);
                             break;
                         }
                     }
