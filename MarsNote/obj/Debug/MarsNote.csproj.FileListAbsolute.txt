@@ -53,3 +53,4 @@ C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.exe.manifes
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.application
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.exe
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.pdb
+C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.csprojResolveAssemblyReference.cache
