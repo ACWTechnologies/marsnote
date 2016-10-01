@@ -37,6 +37,7 @@ C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\bin\Debug\System.Windows.Inter
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\bin\Debug\MahApps.Metro.pdb
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\bin\Debug\MahApps.Metro.xml
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\bin\Debug\Newtonsoft.Json.xml
+C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.csprojResolveAssemblyReference.cache
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\Resources\Icons.baml
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\Resources\IconsNonShared.baml
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MainWindow.g.cs
@@ -53,4 +54,3 @@ C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.exe.manifes
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.application
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.exe
 C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.pdb
-C:\Users\cprw2\Documents\GitHub\MarsNote\MarsNote\obj\Debug\MarsNote.csprojResolveAssemblyReference.cache
