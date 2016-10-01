@@ -17,7 +17,13 @@
                         <Label HorizontalAlignment="Left" VerticalAlignment="Top">
                             <TextBlock Text="This is where all notes will be loaded from and saved to (mn-save.json file)." TextWrapping="WrapWithOverflow"/>
                         </Label>
-                        <TextBox x:Name="textBox_settings_saveFileLocation" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" Margin="0,0,0,10" IsReadOnly="True" />
+                        <TextBox x:Name="textBox_settings_saveFileLocation" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" Margin="0,0,0,10" IsReadOnly="True" >
+                            <TextBox.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Command="ApplicationCommands.Copy" />
+                                </ContextMenu>
+                            </TextBox.ContextMenu>
+                        </TextBox>
                         <DockPanel>
                             <Button x:Name="button_settings_browseSaveFileLocation" Style="{DynamicResource SquareButtonStyle}" Content="Browse" HorizontalAlignment="Left" VerticalAlignment="Top" Click="button_settings_browseSaveFileLocation_Click" Margin="0,0,10,0" />
                             <Button x:Name="button_settings_defaultSaveFileLocation" Style="{DynamicResource SquareButtonStyle}" Content="Set to default" HorizontalAlignment="Left" VerticalAlignment="Top" Click="button_settings_defaultSaveFileLocation_Click" />
@@ -120,9 +126,25 @@
 
         <!-- Editor Column -->
         <Grid x:Name="grid_editor" Grid.Column="4">
-            <xctk:WatermarkTextBox x:Name="watermarkTextBox_name" BorderBrush="{DynamicResource AccentColorBrush}" Watermark="Name (optional)" TextWrapping="NoWrap" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="5,10,307,0" Grid.Column="4" Height="24" VerticalAlignment="Top"/>
+            <xctk:WatermarkTextBox x:Name="watermarkTextBox_name" BorderBrush="{DynamicResource AccentColorBrush}" Watermark="Name (optional)" TextWrapping="NoWrap" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="5,10,307,0" Grid.Column="4" Height="24" VerticalAlignment="Top">
+                <xctk:WatermarkTextBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="ApplicationCommands.Cut" />
+                        <MenuItem Command="ApplicationCommands.Copy" />
+                        <MenuItem Command="ApplicationCommands.Paste" />
+                    </ContextMenu>
+                </xctk:WatermarkTextBox.ContextMenu>
+            </xctk:WatermarkTextBox>
             <xctk:ColorPicker x:Name="colorPicker_colour" BorderBrush="{DynamicResource AccentColorBrush}" HorizontalAlignment="Right" Margin="0,10,202,0" VerticalAlignment="Top" Width="100" ShowAdvancedButton="False" SelectedColor="{Binding ColorColour, UpdateSourceTrigger=PropertyChanged}" Height="24" Grid.Column="4"/>
-            <xctk:WatermarkTextBox x:Name="watermarkTextBox_description" BorderBrush="{DynamicResource AccentColorBrush}" Watermark="Description (optional)" Margin="5,39,5,0" TextWrapping="NoWrap" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Grid.Column="4" Height="24"/>
+            <xctk:WatermarkTextBox x:Name="watermarkTextBox_description" BorderBrush="{DynamicResource AccentColorBrush}" Watermark="Description (optional)" Margin="5,39,5,0" TextWrapping="NoWrap" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Grid.Column="4" Height="24">
+                <xctk:WatermarkTextBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="ApplicationCommands.Cut" />
+                        <MenuItem Command="ApplicationCommands.Copy" />
+                        <MenuItem Command="ApplicationCommands.Paste" />
+                    </ContextMenu>
+                </xctk:WatermarkTextBox.ContextMenu>
+            </xctk:WatermarkTextBox>
             <TextBlock x:Name="textBlock_modified" HorizontalAlignment="Right" TextWrapping="NoWrap" Text="{Binding LastModified, Converter={StaticResource DateTimeToStringConverter}}" VerticalAlignment="Top" Margin="0,10,15,0" Grid.Column="4" Foreground="#FF707070" Height="19" TextAlignment="Right"/>
             <xctk:RichTextBox x:Name="richTextBox_content" BorderBrush="{DynamicResource AccentColorBrush}" Grid.Column="4" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" BorderThickness="1" Margin="5,98,5,0">
                 <RichTextBox.ContextMenu>
