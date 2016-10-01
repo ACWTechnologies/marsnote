@@ -135,7 +135,7 @@
                     </ContextMenu>
                 </xctk:WatermarkTextBox.ContextMenu>
             </xctk:WatermarkTextBox>
-            <xctk:ColorPicker x:Name="colorPicker_colour" BorderBrush="{DynamicResource AccentColorBrush}" HorizontalAlignment="Right" Margin="0,10,202,0" VerticalAlignment="Top" Width="100" ShowAdvancedButton="False" SelectedColor="{Binding ColorColour, UpdateSourceTrigger=PropertyChanged}" Height="24" Grid.Column="4"/>
+            <xctk:ColorPicker x:Name="colorPicker_colour" BorderBrush="{DynamicResource AccentColorBrush}" HorizontalAlignment="Right" Margin="0,10,202,0" VerticalAlignment="Top" Width="100" SelectedColor="{Binding ColorColour, UpdateSourceTrigger=PropertyChanged}" Height="24" Grid.Column="4" UsingAlphaChannel="False"/>
             <xctk:WatermarkTextBox x:Name="watermarkTextBox_description" BorderBrush="{DynamicResource AccentColorBrush}" Watermark="Description (optional)" Margin="5,39,5,0" TextWrapping="NoWrap" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Grid.Column="4" Height="24">
                 <xctk:WatermarkTextBox.ContextMenu>
                     <ContextMenu>
