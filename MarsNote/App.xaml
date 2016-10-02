@@ -17,22 +17,68 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
                 <ResourceDictionary Source="/Resources/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
-        
 
-        <local:DateTimeToStringConverter x:Key="DateTimeToStringConverter" />
-        <local:NoteNameStringToFontStyleConverter x:Key="NoteNameStringToFontStyleConverter" />
-        <local:NoteNameStringToStringConverter x:Key="NoteNameStringToStringConverter" />
-        <local:BoolToVisibilityCollapsedConverter x:Key="BoolToVisibilityCollapsedConverter" />
+            <local:DateTimeToStringConverter x:Key="DateTimeToStringConverter" />
+            <local:NoteNameStringToFontStyleConverter x:Key="NoteNameStringToFontStyleConverter" />
+            <local:NoteNameStringToStringConverter x:Key="NoteNameStringToStringConverter" />
+            <local:BoolToVisibilityCollapsedConverter x:Key="BoolToVisibilityCollapsedConverter" />
 
-            <Style TargetType="TextBlock" x:Key="TextBlockTitleStyle">
-            <Style.Setters>
+            <SolidColorBrush x:Key="PathIconSquareFillNormal" Color="#FF000000" />
+            <SolidColorBrush x:Key="PathIconSquareFillMouseOver" Color="#FF000000" />
+            <SolidColorBrush x:Key="PathIconSquareFillPressed" Color="#FF000000" />
+            <SolidColorBrush x:Key="PathIconSquareBackgroundNormal" Color="#FFE0E0E0" />
+            <SolidColorBrush x:Key="PathIconSquareBackgroundMouseOver" Color="#FFC3C3C3" />
+            <SolidColorBrush x:Key="PathIconSquareBackgroundPressed" Color="#FFA9A9A9" />
+            <Style x:Key="PathIconSquareButtonStyle" TargetType="{x:Type Button}">
+                <Setter Property="Background" Value="{StaticResource PathIconSquareBackgroundNormal}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <ControlTemplate.Resources>
+                                <Style TargetType="{x:Type Path}">
+                                    <Style.Setters>
+                                        <Setter Property="Fill" Value="{StaticResource PathIconSquareFillNormal}" />
+                                    </Style.Setters>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Button, AncestorLevel=1}, Path=IsMouseOver}" Value="True" >
+                                            <Setter Property="Fill" Value="{StaticResource PathIconSquareFillMouseOver}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Button, AncestorLevel=1}, Path=IsPressed}" Value="True" >
+                                            <Setter Property="Fill" Value="{StaticResource PathIconSquareFillPressed}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Button, AncestorLevel=1}, Path=IsEnabled}" Value="False" >
+                                            <Setter Property="Opacity" Value="0.5" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ControlTemplate.Resources>
+                            <Border x:Name="border" Padding="0" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Background="{TemplateBinding Background}">
+                                <Grid>
+                                    <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{StaticResource PathIconSquareBackgroundMouseOver}" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="{StaticResource PathIconSquareBackgroundPressed}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style TargetType="{x:Type TextBlock}" x:Key="TextBlockTitleStyle">
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Foreground" Value="#FF707070"/>
-            </Style.Setters>
-        </Style>
-        
-        <DataTemplate x:Key="FolderListBoxItem">
+            </Style>
+
+            <DataTemplate x:Key="FolderListBoxItem">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*" />
@@ -41,7 +87,7 @@
                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis"/>
                     <Button x:Name="button_folderListBoxItem_delete" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Width="20" Height="25" Click="button_folderListBoxItem_delete_Click">
                         <Button.Style>
-                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource SquareButtonStyle}">
+                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource PathIconSquareButtonStyle}">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type ListBoxItem}},Path=IsMouseOver}" Value="True">
@@ -51,11 +97,7 @@
                             </Style>
                         </Button.Style>
                         <Button.Content>
-                            <Rectangle Width="10" Height="13">
-                                <Rectangle.Fill>
-                                    <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_delete}" />
-                                </Rectangle.Fill>
-                            </Rectangle>
+                            <Path Width="10" Height="13" Stretch="Fill" Data="F1 M 25.3333,23.75L 50.6667,23.75C 51.5411,23.75 51.8541,27.3125 51.8541,27.3125L 24.1458,27.3125C 24.1458,27.3125 24.4589,23.75 25.3333,23.75 Z M 35.625,19.7917L 40.375,19.7917C 40.8122,19.7917 41.9583,20.9378 41.9583,21.375C 41.9583,21.8122 40.8122,22.9584 40.375,22.9584L 35.625,22.9584C 35.1878,22.9584 34.0416,21.8122 34.0416,21.375C 34.0416,20.9378 35.1878,19.7917 35.625,19.7917 Z M 27.7083,28.5L 48.2916,28.5C 49.1661,28.5 49.875,29.2089 49.875,30.0834L 48.2916,53.8334C 48.2916,54.7078 47.5828,55.4167 46.7083,55.4167L 29.2917,55.4167C 28.4172,55.4167 27.7083,54.7078 27.7083,53.8334L 26.125,30.0834C 26.125,29.2089 26.8339,28.5 27.7083,28.5 Z M 30.0833,31.6667L 30.4792,52.25L 33.25,52.25L 32.8542,31.6667L 30.0833,31.6667 Z M 36.4167,31.6667L 36.4167,52.25L 39.5833,52.25L 39.5833,31.6667L 36.4167,31.6667 Z M 43.1458,31.6667L 42.75,52.25L 45.5208,52.25L 45.9167,31.6667L 43.1458,31.6667 Z "/>
                         </Button.Content>
                     </Button>
                 </Grid>
