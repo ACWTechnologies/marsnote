@@ -15,22 +15,27 @@ namespace MarsNote
         /// Private member for <see cref="Name"/>.
         /// </summary>
         private string _name;
+
         /// <summary>
         /// Private member for <see cref="Description"/>.
         /// </summary>
         private string _description;
+
         /// <summary>
         /// Private member for <see cref="Content"/>.
         /// </summary>
         private string _content;
+
         /// <summary>
         /// Private member for <see cref="Colour"/>.
         /// </summary>
         private Brush _colour;
+
         /// <summary>
         /// Private member for <see cref="LastModified"/>.
         /// </summary>
         private DateTime _lastModified;
+
         /// <summary>
         /// Private member for <see cref="Pinned"/>.
         /// </summary>
@@ -39,7 +44,7 @@ namespace MarsNote
         /// <summary>
         /// A value indicating whether the <see cref="Note"/> instance is ready for modification.
         /// </summary>
-        private bool readyForModification = false;
+        private bool _readyForModification = false;
 
         [JsonConstructor]
         public Note(string name, string description, string content, Brush colour, DateTime lastModified, bool pinned)
@@ -50,7 +55,7 @@ namespace MarsNote
             Colour = colour;
             LastModified = lastModified;
             Pinned = pinned;
-            readyForModification = true;
+            _readyForModification = true;
         }
 
         public Note() : this(null, null, null, null, DateTime.Now, false) { }
@@ -59,7 +64,7 @@ namespace MarsNote
 
         private void Modified()
         {
-            if (readyForModification) { LastModified = DateTime.Now; }
+            if (_readyForModification) { LastModified = DateTime.Now; }
         }
 
         /// <summary>
@@ -178,10 +183,7 @@ namespace MarsNote
             }
         }
 
-        public string ToJson()
-        {
-            return JsonHelper.Serialize(this);
-        }
+        public string ToJson() => JsonHelper.Serialize(this);
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {

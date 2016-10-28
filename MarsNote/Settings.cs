@@ -13,7 +13,7 @@ namespace MarsNote
         public string SaveFileLocation
         {
             get { return _saveFileLocation; }
-            set { _saveFileLocation = value ?? FileHelper.Default_SaveFileLocation; }
+            set { _saveFileLocation = value ?? FileHelper.DefaultSaveFileLocation; }
         }
 
         public string AccentColour
@@ -61,10 +61,7 @@ namespace MarsNote
         /// <summary>
         /// Gets a new empty instance of <see cref="Settings"/>.
         /// </summary>
-        public static Settings BlankSettings
-        {
-            get { return new Settings(null, null, 0, null); }
-        }
+        public static Settings BlankSettings => new Settings(null, null, 0, null);
 
         /// <summary>
         /// Reads the settings saved in the save file.
@@ -74,7 +71,7 @@ namespace MarsNote
             try
             {
                 var settings = JsonHelper.DeserializePath<Settings>(FileHelper.SettingsFileLocation,
-                    new JsonSerializerSettings()
+                    new JsonSerializerSettings
                     {
                         MissingMemberHandling = MissingMemberHandling.Ignore,
                         NullValueHandling = NullValueHandling.Include

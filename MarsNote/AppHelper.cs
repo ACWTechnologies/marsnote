@@ -32,16 +32,7 @@ namespace MarsNote
         /// </summary>
         public static string GetCurrentVersion()
         {
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                // Application is network deployed
-                return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            }
-            else
-            {
-                // Application is not network deployed
-                return "Unavailable";
-            }
+            return ApplicationDeployment.IsNetworkDeployed ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString() : "Unavailable";
         }
 
         [Flags]
@@ -126,8 +117,7 @@ namespace MarsNote
             }
 
             // If there are no corners that have not been found, return true, else false
-            if (corners == 0) { return true; }
-            else { return false; }
+            return corners == 0;
         }
 
         /// <summary>
@@ -140,8 +130,8 @@ namespace MarsNote
             double screenHeight = SystemParameters.PrimaryScreenHeight;
             double windowWidth = window.Width;
             double windowHeight = window.Height;
-            window.Left = (screenWidth / 2) - (windowWidth / 2);
-            window.Top = (screenHeight / 2) - (windowHeight / 2);
+            window.Left = screenWidth / 2 - windowWidth / 2;
+            window.Top = screenHeight / 2 - windowHeight / 2;
         }
 
         /// <summary>
@@ -155,7 +145,7 @@ namespace MarsNote
                 using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"))
                 {
                     // Return true if the 'MarsNote' key exists, and false if it does not
-                    return key.GetValue("MarsNote") == null ? false : true;
+                    return key?.GetValue("MarsNote") != null;
                 }
             }
             catch (System.Security.SecurityException)
@@ -177,7 +167,7 @@ namespace MarsNote
 
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
-                key.SetValue("MarsNote", "\"" + FileHelper.StartupFileLocation + "\"");
+                key?.SetValue("MarsNote", $"\"{FileHelper.StartupFileLocation}\"");
             }
         }
 
@@ -188,7 +178,7 @@ namespace MarsNote
         {
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
             {
-                key.DeleteValue("MarsNote", false);
+                key?.DeleteValue("MarsNote", false);
             }
         }
 
@@ -199,7 +189,9 @@ namespace MarsNote
         public static void ChangeAccent(Accent accent)
         {
             if (accent != null)
+            {
                 ThemeManager.ChangeAppStyle(System.Windows.Application.Current, accent, ThemeManager.GetAppTheme("BaseLight"));
+            }
         }
 
         /// <summary>

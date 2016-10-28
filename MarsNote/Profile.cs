@@ -15,6 +15,7 @@ namespace MarsNote
         /// Private member for <see cref="Name"/>.
         /// </summary>
         private string _name;
+
         /// <summary>
         /// Private member for <see cref="Folders"/>.
         /// </summary>
@@ -23,7 +24,7 @@ namespace MarsNote
         [JsonConstructor]
         public Profile(string name, ObservableCollection<Folder> folders)
         {
-            if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentNullException("name"); }
+            if (string.IsNullOrWhiteSpace(name)) { throw new ArgumentNullException(nameof(name)); }
             Name = name;
             Folders = folders ?? new ObservableCollection<Folder>();
         }
@@ -64,10 +65,7 @@ namespace MarsNote
             }
         }
 
-        public string ToJson()
-        {
-            return JsonHelper.Serialize(this);
-        }
+        public string ToJson() => JsonHelper.Serialize(this);
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {

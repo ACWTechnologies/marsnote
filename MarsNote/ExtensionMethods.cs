@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace MarsNote
 {
@@ -10,16 +11,9 @@ namespace MarsNote
         /// <param name="profiles">The Collection of <see cref="Profile"/>s to check.</param>
         /// <param name="folder">The <see cref="Folder"/> to look for.</param>
         /// <returns>Whether or not the folder exists.</returns>
-        public static bool ContainsFolder(this Collection<Profile> profiles, Folder folder)
+        public static bool ContainsFolder(this IEnumerable<Profile> profiles, Folder folder)
         {
-            foreach (Profile profile in profiles)
-            {
-                if (profile.Folders.Contains(folder))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return profiles.Any(profile => profile.Folders.Contains(folder));
         }
 
         /// <summary>
@@ -28,19 +22,11 @@ namespace MarsNote
         /// <param name="profiles">The Collection of <see cref="Profile"/>s to check.</param>
         /// <param name="note">The <see cref="Note"/> to look for.</param>
         /// <returns>Whether or not the note exists.</returns>
-        public static bool ContainsNote(this Collection<Profile> profiles, Note note)
+        public static bool ContainsNote(this IEnumerable<Profile> profiles, Note note)
         {
-            foreach (Profile profile in profiles)
-            {
-                foreach (Folder folder in profile.Folders)
-                {
-                    if (folder.Notes.Contains(note))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            return profiles
+                .SelectMany(profile => profile.Folders)
+                .Any(folder => folder.Notes.Contains(note));
         }
     }
 }
