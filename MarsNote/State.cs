@@ -19,7 +19,7 @@ namespace MarsNote
             try
             {
                 return JsonHelper.DeserializePath<State>(FileHelper.StateFileLocation,
-                    new JsonSerializerSettings()
+                    new JsonSerializerSettings
                     {
                         MissingMemberHandling = MissingMemberHandling.Ignore,
                         NullValueHandling = NullValueHandling.Include
@@ -33,7 +33,7 @@ namespace MarsNote
 
         public static void Save(string profile, string folder)
         {
-            State s = new State(profile, folder);
+            var s = new State(profile, folder);
             string json = JsonHelper.Serialize(s);
 
             FileHelper.Write(json, FileHelper.StateFileLocation);

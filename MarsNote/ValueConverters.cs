@@ -39,14 +39,7 @@ namespace MarsNote
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             // Do the conversion from string to FontStyle
-            if (string.IsNullOrWhiteSpace((string)value))
-            {
-                return FontStyles.Italic;
-            }
-            else
-            {
-                return FontStyles.Normal;
-            }
+            return string.IsNullOrWhiteSpace((string)value) ? FontStyles.Italic : FontStyles.Normal;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -62,14 +55,7 @@ namespace MarsNote
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             // Do the conversion from string to FontStyle
-            if (string.IsNullOrWhiteSpace((string)value))
-            {
-                return "No Name";
-            }
-            else
-            {
-                return value;
-            }
+            return string.IsNullOrWhiteSpace((string)value) ? "No Name" : value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -85,14 +71,7 @@ namespace MarsNote
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             // Do the conversion from string to FontStyle
-            if (string.IsNullOrWhiteSpace((string)value))
-            {
-                return "No Name";
-            }
-            else
-            {
-                return value;
-            }
+            return string.IsNullOrWhiteSpace((string)value) ? "No Name" : value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -108,14 +87,7 @@ namespace MarsNote
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             // Do the conversion from bool to Visibility
-            if ((bool)value)
-            {
-                return Visibility.Visible;
-            }
-            else
-            {
-                return Visibility.Collapsed;
-            }
+            return (bool)value ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -131,14 +103,7 @@ namespace MarsNote
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             // Do the conversion from bool to Visibility
-            if ((bool)value)
-            {
-                return Visibility.Visible;
-            }
-            else
-            {
-                return Visibility.Hidden;
-            }
+            return (bool)value ? Visibility.Visible : Visibility.Hidden;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

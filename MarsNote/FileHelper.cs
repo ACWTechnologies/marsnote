@@ -13,18 +13,22 @@ namespace MarsNote
         /// The default directory for all MarsNote files.
         /// </summary>
         private static readonly string MarsNoteDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\ACW Technologies\MarsNote\";
+
         /// <summary>
         /// The path to the state file.
         /// </summary>
         public static readonly string StateFileLocation = MarsNoteDirectory + "mn-state.json";
+
         /// <summary>
         /// The path to the settings file.
         /// </summary>
         public static readonly string SettingsFileLocation = MarsNoteDirectory + "mn-settings.json";
+
         /// <summary>
         /// The path to the startup file.
         /// </summary>
         public static readonly string StartupFileLocation = MarsNoteDirectory + "startup.acwmn";
+
         /// <summary>
         /// The URL to the license.
         /// </summary>
@@ -33,13 +37,15 @@ namespace MarsNote
         /// <summary>
         /// The default location the save file should be saved in, if no other directory is specified.
         /// </summary>
-        public static readonly string Default_SaveFileLocation = MarsNoteDirectory;
+        public static readonly string DefaultSaveFileLocation = MarsNoteDirectory;
+
         /// <summary>
         /// The default name of the save file.
         /// </summary>
-        public static readonly string Default_SaveFileName = "mn-save.json";
+        public static readonly string DefaultSaveFileName = "mn-save.json";
 
         private static string _saveFileLocation;
+
         /// <summary>
         /// The location of the save file.
         /// </summary>
@@ -48,7 +54,7 @@ namespace MarsNote
             get
             {
                 // Combine the directory and file name, then return
-                return Path.Combine(_saveFileLocation, Default_SaveFileName);
+                return Path.Combine(_saveFileLocation, DefaultSaveFileName);
             }
             set
             {
@@ -81,7 +87,7 @@ namespace MarsNote
             else
             {
                 // Set the location to default
-                SaveFileLocation = Default_SaveFileLocation;
+                SaveFileLocation = DefaultSaveFileLocation;
             }
         }
 
@@ -125,7 +131,9 @@ namespace MarsNote
         public static void Write(string contents, string path, bool append = false)
         {
             if (contents == null)
+            {
                 return;
+            }
 
             // If the file does not exist
             if (!File.Exists(path))
@@ -179,16 +187,14 @@ namespace MarsNote
         /// <returns>The path of the folder, or null if browse cancelled.</returns>
         public static string BrowseForFolder(string description = "", Environment.SpecialFolder rootFolder = Environment.SpecialFolder.Desktop, bool showNewFolderButton = true)
         {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            dialog.Description = description;
-            dialog.RootFolder = rootFolder;
-            dialog.ShowNewFolderButton = showNewFolderButton;
-
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            var dialog = new System.Windows.Forms.FolderBrowserDialog
             {
-                return dialog.SelectedPath;
-            }
-            return null;
+                Description = description,
+                RootFolder = rootFolder,
+                ShowNewFolderButton = showNewFolderButton
+            };
+
+            return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
         }
 
         /// <summary>
@@ -221,6 +227,7 @@ namespace MarsNote
         /// An order direction of ascending or descending.
         /// </summary>
         public enum OrderType { Ascending, Descending }
+
         /// <summary>
         /// Sorts a collection of type T by a specific property, in either ascending or descending order.
         /// </summary>
@@ -228,14 +235,14 @@ namespace MarsNote
         /// <param name="collection">The collection of type T.</param>
         /// <param name="property">The name of the property to sort by.</param>
         /// <param name="orderType">The order in which to sort.</param>
-        public static ObservableCollection<T> Sort<T>(this ObservableCollection<T> collection, string property, OrderType orderType)
+        public static ObservableCollection<T> Sort<T>(this IEnumerable<T> collection, string property, OrderType orderType)
         {
             PropertyInfo p = typeof(T).GetProperty(property);
             if (property == null) { throw new ArgumentException("No such property exists"); }
 
-            List<T> sorted;
-            if (orderType == OrderType.Ascending) { sorted = collection.OrderBy(x => p.GetValue(x, null)).ToList(); }
-            else { sorted = collection.OrderByDescending(x => p.GetValue(x, null)).ToList(); }
+            List<T> sorted = orderType == OrderType.Ascending
+                ? collection.OrderBy(x => p.GetValue(x, null)).ToList()
+                : collection.OrderByDescending(x => p.GetValue(x, null)).ToList();
             
 
             // If T implements IPinnable
@@ -248,7 +255,7 @@ namespace MarsNote
                 for (int i = sorted.Count - 1; i >= moved; i--)
                 {
                     T temp = sorted[i];
-                    IPinnable pinnable = (IPinnable)temp;
+                    var pinnable = (IPinnable)temp;
 
                     if (pinnable.Pinned)
                     {
@@ -280,7 +287,7 @@ namespace MarsNote
         /// <param name="path">The full path of the file.</param>
         public static FileStream CreateFileAndDirectory(string path)
         {
-            if (path == null) { throw new ArgumentNullException("path"); }
+            if (path == null) { throw new ArgumentNullException(nameof(path)); }
             else if (string.IsNullOrWhiteSpace(path)) { throw new ArgumentException("path cannot be empty."); }
 
             string fileName = Path.GetFileName(path);
@@ -295,10 +302,10 @@ namespace MarsNote
         /// <param name="directory">The directory to create.</param>
         public static FileStream CreateFileAndDirectory(string fileName, string directory)
         {
-            if (fileName == null) { throw new ArgumentNullException("fileName"); }
+            if (fileName == null) { throw new ArgumentNullException(nameof(fileName)); }
             else if (string.IsNullOrWhiteSpace(fileName)) { throw new ArgumentException("fileName cannot be empty."); }
 
-            if (directory == null) { throw new ArgumentNullException("directory"); }
+            if (directory == null) { throw new ArgumentNullException(nameof(directory)); }
             else if (string.IsNullOrWhiteSpace(directory)) { throw new ArgumentException("directory cannot be empty."); }
 
             Directory.CreateDirectory(directory);
