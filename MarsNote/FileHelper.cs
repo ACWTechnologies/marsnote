@@ -32,7 +32,17 @@ namespace MarsNote
         /// <summary>
         /// The URL to the license.
         /// </summary>
-        public static readonly string LicenseURL = @"http://acwtechnologies.co.uk/software/marsnote#license";
+        public const string LicenseURL = "https://acwtechnologies.co.uk/software/marsnote#license";
+
+        /// <summary>
+        /// The URL to the help page.
+        /// </summary>
+        public const string HelpURL = "https://acwtechnologies.co.uk/help/marsnote/?sender=mn";
+
+        /// <summary>
+        /// The URL to the GitHub issues page.
+        /// </summary>
+        public const string GitHubIssuesURL = "https://github.com/ACWTechnologiesAdmin/MarsNote/issues";
 
         /// <summary>
         /// The default location the save file should be saved in, if no other directory is specified.
@@ -42,7 +52,7 @@ namespace MarsNote
         /// <summary>
         /// The default name of the save file.
         /// </summary>
-        public static readonly string DefaultSaveFileName = "mn-save.json";
+        public const string DefaultSaveFileName = "mn-save.json";
 
         private static string _saveFileLocation;
 
@@ -237,16 +247,19 @@ namespace MarsNote
         /// <param name="orderType">The order in which to sort.</param>
         public static ObservableCollection<T> Sort<T>(this IEnumerable<T> collection, string property, OrderType orderType)
         {
-            PropertyInfo p = typeof(T).GetProperty(property);
-            if (property == null) { throw new ArgumentException("No such property exists"); }
+            if (collection == null) { throw new ArgumentNullException(nameof(collection)); }
+            if (property == null) { throw new ArgumentNullException(nameof(property)); }
+
+            PropertyInfo propertyInfo = typeof(T).GetProperty(property);
+            if (propertyInfo == null) { throw new ArgumentException($"The property '{property}' does not exist within the type '{typeof(T)}'.", nameof(property)); }
 
             List<T> sorted = orderType == OrderType.Ascending
-                ? collection.OrderBy(x => p.GetValue(x, null)).ToList()
-                : collection.OrderByDescending(x => p.GetValue(x, null)).ToList();
+                ? collection.OrderBy(x => propertyInfo.GetValue(x, null)).ToList()
+                : collection.OrderByDescending(x => propertyInfo.GetValue(x, null)).ToList();
             
 
             // If T implements IPinnable
-            if (typeof(T).GetInterface("IPinnable") != null)
+            if (typeof(T).GetInterface(typeof(IPinnable).FullName) != null)
             {
                 // Remember number of pinned items moved to the top of the list
                 int moved = 0;
@@ -288,7 +301,7 @@ namespace MarsNote
         public static FileStream CreateFileAndDirectory(string path)
         {
             if (path == null) { throw new ArgumentNullException(nameof(path)); }
-            else if (string.IsNullOrWhiteSpace(path)) { throw new ArgumentException("path cannot be empty."); }
+            else if (string.IsNullOrWhiteSpace(path)) { throw new ArgumentException("Path cannot be empty.", nameof(path)); }
 
             string fileName = Path.GetFileName(path);
             string directory = Path.GetDirectoryName(path);
@@ -303,10 +316,10 @@ namespace MarsNote
         public static FileStream CreateFileAndDirectory(string fileName, string directory)
         {
             if (fileName == null) { throw new ArgumentNullException(nameof(fileName)); }
-            else if (string.IsNullOrWhiteSpace(fileName)) { throw new ArgumentException("fileName cannot be empty."); }
+            else if (string.IsNullOrWhiteSpace(fileName)) { throw new ArgumentException("File name cannot be empty.", nameof(fileName)); }
 
             if (directory == null) { throw new ArgumentNullException(nameof(directory)); }
-            else if (string.IsNullOrWhiteSpace(directory)) { throw new ArgumentException("directory cannot be empty."); }
+            else if (string.IsNullOrWhiteSpace(directory)) { throw new ArgumentException("Directory cannot be empty.", nameof(directory)); }
 
             Directory.CreateDirectory(directory);
 

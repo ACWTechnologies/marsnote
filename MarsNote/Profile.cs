@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace MarsNote
 {
     /// <summary>
-    /// A collection of <paramref name="Folder"/>s.
+    /// A collection of <see cref="Folder"/>s.
     /// </summary>
     public class Profile : INotifyPropertyChanged
     {

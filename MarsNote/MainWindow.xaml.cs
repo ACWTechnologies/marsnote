@@ -2,9 +2,11 @@
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,7 +21,7 @@ namespace MarsNote
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
-        public ObservableCollection<Profile> LoadedProfiles;
+        private ObservableCollection<Profile> LoadedProfiles;
         
         public MainWindow()
         {
@@ -62,9 +64,9 @@ namespace MarsNote
             LoadAccentsToSettings();
 
             // Create a dispatcher timer for auto save
-            autoSaveDT = new DispatcherTimer();
+            _autoSaveDt = new DispatcherTimer();
             // Add an event handler to the Tick event
-            autoSaveDT.Tick += AutoSaveDT_Tick;
+            _autoSaveDt.Tick += AutoSaveDT_Tick;
             // Set the interval
             ChangeAutoSaveInterval(firstLoadSettings.AutoSave);
 
@@ -74,8 +76,8 @@ namespace MarsNote
 
             AddSettingsEventHandlers();
         }
-        
-        DispatcherTimer autoSaveDT;
+
+        private readonly DispatcherTimer _autoSaveDt;
         private void AutoSaveDT_Tick(object sender, EventArgs e)
         {
             FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
@@ -87,67 +89,71 @@ namespace MarsNote
         /// <param name="interval">The new interval.</param>
         private void ChangeAutoSaveInterval(int interval)
         {
-            autoSaveDT.Stop();
-            autoSaveDT.Interval = TimeSpan.FromMinutes(interval);
-            if (interval != 0) autoSaveDT.Start();
+            _autoSaveDt.Stop();
+            _autoSaveDt.Interval = TimeSpan.FromMinutes(interval);
+            if (interval != 0) { _autoSaveDt.Start(); }
         }
 
         /// <summary>
         /// Move a <see cref="Note"/> from one <see cref="Folder"/> to another.
         /// </summary>
         /// <param name="note">The note to move.</param>
-        /// <param name="oldFolder">The folder to move the note from.</param>
-        /// <param name="newFolder">The folder to move the note to.</param>
-        public void MoveNoteToAnotherFolder(Note note, Folder oldFolder, Folder newFolder)
+        /// <param name="sourceFolder">The folder to move the note from.</param>
+        /// <param name="destinationFolder">The folder to move the note to.</param>
+        public void MoveNoteToAnotherFolder(Note note, Folder sourceFolder, Folder destinationFolder)
         {
-            if (note == null || oldFolder == null || newFolder == null) { return; }
+            if (note == null) { throw new ArgumentNullException(nameof(note)); }
+            if (sourceFolder == null) { throw new ArgumentNullException(nameof(sourceFolder)); }
+            if (destinationFolder == null) { throw new ArgumentNullException(nameof(destinationFolder)); }
+            if (ReferenceEquals(sourceFolder, destinationFolder)) { return; }
+            if (!sourceFolder.Notes.Contains(note)) { throw new ArgumentException("Source folder does not contain the note to be moved.", nameof(sourceFolder)); }
 
-            // If the old folder contains the note
-            if (oldFolder.Notes.Contains(note))
-            {
-                // Insert note to the start of the new folder
-                newFolder.Notes.Insert(0, note);
-                // Remove the note from the old folder
-                oldFolder.Notes.Remove(note);
+            // Insert note to the start of the destination folder
+            destinationFolder.Notes.Insert(0, note);
+            // Remove the note from the source folder
+            sourceFolder.Notes.Remove(note);
 
-                UpdateMessages();
-            }
+            UpdateMessages();
         }
 
         /// <summary>
         /// Move a <see cref="Folder"/> from one <see cref="Profile"/> to another.
         /// </summary>
         /// <param name="folder">The folder to move.</param>
-        /// <param name="oldProfile">The profile to move the folder from.</param>
-        /// <param name="newProfile">The profile to move the folder to.</param>
-        public void MoveFolderToAnotherProfile(Folder folder, Profile oldProfile, Profile newProfile)
+        /// <param name="sourceProfile">The profile to move the folder from.</param>
+        /// <param name="destinationProfile">The profile to move the folder to.</param>
+        public async void MoveFolderToAnotherProfile(Folder folder, Profile sourceProfile, Profile destinationProfile)
         {
             if (folder == null) { throw new ArgumentNullException(nameof(folder)); }
-            if (oldProfile == null) { throw new ArgumentNullException(nameof(oldProfile)); }
-            if (newProfile == null) { throw new ArgumentNullException(nameof(newProfile)); }
+            if (sourceProfile == null) { throw new ArgumentNullException(nameof(sourceProfile)); }
+            if (destinationProfile == null) { throw new ArgumentNullException(nameof(destinationProfile)); }
+            if (ReferenceEquals(sourceProfile, destinationProfile)) { return; }
+            if (!sourceProfile.Folders.Contains(folder)) { throw new ArgumentException("Source profile does not contain the folder to be moved.", nameof(sourceProfile)); }
 
-            // If the old profile contains the folder
-            if (oldProfile.Folders.Contains(folder))
+            if (destinationProfile.Folders.Any(destinationFolder => destinationFolder.Name == folder.Name))
             {
-                // Insert folder to the start of the new profile
-                newProfile.Folders.Insert(0, folder);
-                // Remove the folder from the old profile
-                oldProfile.Folders.Remove(folder);
-
-                UpdateMessages();
+                // Destination profile contains a folder with the same name as the folder being moved
+                await this.ShowMessageAsync("Move Folder", $@"The profile '{destinationProfile.Name}' already contains a folder called '{folder.Name}'. Folder names must be unique.");
+                return;
             }
+
+            // Insert folder to the start of the destination profile
+            destinationProfile.Folders.Insert(0, folder);
+            // Remove the folder from the source profile
+            sourceProfile.Folders.Remove(folder);
+
+            UpdateMessages();
         }
         
         private void MainWindow_ContentRendered(object sender, EventArgs e)
         {
-            if (!this.AnyCornersOnScreen(AppHelper.WindowCorners.TopLeft | AppHelper.WindowCorners.TopRight))
-            {
-                // Window loaded off screen, most likely because of SaveWindowPosition setting
-                WindowState = WindowState.Normal;
-                Width = 950;
-                Height = 550;
-                this.CenterOnScreen();
-            }
+            if (this.AnyCornersOnScreen(AppHelper.WindowCorners.TopLeft | AppHelper.WindowCorners.TopRight)) { return; }
+
+            // Window loaded off screen, most likely because of SaveWindowPosition setting
+            WindowState = WindowState.Normal;
+            Width = 950;
+            Height = 550;
+            this.CenterOnScreen();
         }
 
         private void window_main_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -166,7 +172,7 @@ namespace MarsNote
         private void FirstTimeLaunch()
         {
             // Create the save file
-            var newSaveFile = FileHelper.CreateFileAndDirectory(FileHelper.SaveFileLocation);
+            FileStream newSaveFile = FileHelper.CreateFileAndDirectory(FileHelper.SaveFileLocation);
             newSaveFile.Close();
             // Create a new collection of profiles
             LoadedProfiles = new ObservableCollection<Profile>();
@@ -198,35 +204,23 @@ namespace MarsNote
         /// Loads a collection of profiles into the profiles combobox.
         /// </summary>
         /// <param name="profiles">The collection of profiles.</param>
-        private void UILoadProfiles(ObservableCollection<Profile> profiles)
+        private void UILoadProfiles(IEnumerable<Profile> profiles)
         {
             comboBox_profiles.ItemsSource = profiles;
-            if (LoadedProfiles.Count > 0)
-            {
-                comboBox_profiles.SelectedIndex = 0;
-            }
-            else
-            {
-                comboBox_profiles.SelectedIndex = -1;
-            }
+            // if (LoadedProfiles.Count > 0) { comboBox_profiles.SelectedIndex = 0; }
+            // else { comboBox_profiles.SelectedIndex = -1; }
+
+            if (profiles.Any()) { comboBox_profiles.SelectedIndex = 0; }
+            else { comboBox_profiles.SelectedIndex = -1; }
             UpdateMessages();
         }
         /// <summary>
         /// Loads a collection of folders into the folders listbox.
         /// </summary>
         /// <param name="folders">The collection of folders.</param>
-        private void UILoadFolders(ObservableCollection<Folder> folders)
+        private void UILoadFolders(IEnumerable<Folder> folders)
         {
-            if (folders == null)
-            {
-                // No profile selected
-                button_addFolder.IsEnabled = false;
-            }
-            else
-            {
-                // Profile selected
-                button_addFolder.IsEnabled = true;
-            }
+            button_addFolder.IsEnabled = folders != null;
             listBox_folders.ItemsSource = folders;
             UpdateMessages();
         }
@@ -235,18 +229,9 @@ namespace MarsNote
         /// Loads a collection of notes into the notes listbox.
         /// </summary>
         /// <param name="notes">The collection of notes.</param>
-        private void UILoadNotes(ObservableCollection<Note> notes)
+        private void UILoadNotes(IEnumerable<Note> notes)
         {
-            if (notes == null)
-            {
-                // No folder selected
-                button_addNote.IsEnabled = false;
-            }
-            else
-            {
-                // Folder selected
-                button_addNote.IsEnabled = true;
-            }
+            button_addNote.IsEnabled = notes != null;
             listBox_notes.ItemsSource = notes;
             UpdateMessages();
         }
@@ -259,7 +244,7 @@ namespace MarsNote
         {
             grid_editor.DataContext = note;
             button_pinNote.DataContext = note;
-            grid_editor.IsEnabled = stackPanel_noteButtons.IsEnabled = note == null ? false : true;
+            grid_editor.IsEnabled = stackPanel_noteButtons.IsEnabled = note != null;
 
             // Reset the undo queue
             richTextBox_content.UndoLimit = 0;
@@ -285,7 +270,12 @@ namespace MarsNote
 
                 if (state.Folder != null)
                 {
-                    foreach (Folder folder in ((Profile)comboBox_profiles.SelectedItem).Folders ?? new ObservableCollection<Folder>())
+                    if (((Profile)comboBox_profiles.SelectedItem)?.Folders == null)
+                    {
+                        return;
+                    }
+
+                    foreach (Folder folder in ((Profile)comboBox_profiles.SelectedItem).Folders)
                     {
                         if (state.Folder == folder.Name)
                         {
@@ -352,7 +342,7 @@ namespace MarsNote
         /// <summary>
         /// Adds a new note to the currently selected folder, at the top of the list.
         /// </summary>
-        public void AddNote()
+        private void AddNote()
         {
             var n = new Note();
             ((Folder)listBox_folders.SelectedItem)?.Notes.Insert(0, n);
@@ -367,6 +357,7 @@ namespace MarsNote
         private async void button_removeNote_Click(object sender, RoutedEventArgs e)
         {
             var selectedNote = (Note)listBox_notes.SelectedItem;
+            //var selectedNote = (Note)grid_editor.DataContext;
             if (selectedNote == null) { return; }
             
             string message = string.IsNullOrWhiteSpace(selectedNote.Name) ? "Are you sure you want to delete this note? This action cannot be undone." : "Are you sure you want to delete the note '" + selectedNote.Name + "'? This action cannot be undone.";
@@ -424,7 +415,7 @@ namespace MarsNote
         /// Prompts the user to choose a new name for a <see cref="Profile"/>.
         /// </summary>
         /// <param name="profile">The profile to rename.</param>
-        public async void RenameProfile(Profile profile)
+        private async void RenameProfile(Profile profile)
         {
             if (profile == null) { return; }
 
@@ -456,7 +447,7 @@ namespace MarsNote
         /// </summary>
         /// <param name="profile">The profile to delete.</param>
         /// <param name="requiresConfirmation">Whether or not the user has to confirm.</param>
-        public async void DeleteProfile(Profile profile, bool requiresConfirmation = true)
+        private async void DeleteProfile(Profile profile, bool requiresConfirmation = true)
         {
             if (profile == null) { return; }
 
@@ -513,14 +504,11 @@ namespace MarsNote
             string folderName = await this.ShowInputAsync("New Folder", "Enter a name for the new folder:", new MetroDialogSettings { AffirmativeButtonText = "Create", NegativeButtonText = "Cancel" });
             if (string.IsNullOrWhiteSpace(folderName)) { return; }
 
-            foreach (Folder folder in ((Profile)comboBox_profiles.SelectedItem).Folders)
+            if (((Profile)comboBox_profiles.SelectedItem).Folders.Any(folder => folder.Name == folderName))
             {
-                if (folder.Name == folderName)
-                {
-                    // Folder with same name already exists
-                    await this.ShowMessageAsync("New Folder", $"The name \'{folderName}\' is already in use by another folder. Please choose a different name and try again.");
-                    return;
-                }
+                // Folder with same name already exists
+                await this.ShowMessageAsync("New Folder", $"The name \'{folderName}\' is already in use by another folder. Please choose a different name and try again.");
+                return;
             }
 
             // Create folder
@@ -532,9 +520,12 @@ namespace MarsNote
 
         public void DeleteFolderFromListBoxItem(object sender)
         {
-            var btn = (Button)sender;
-            var folder = (Folder)btn.DataContext;
-            DeleteFolder(folder);
+            var btn = sender as Button;
+            var folder = btn?.DataContext as Folder;
+            if (folder != null)
+            {
+                DeleteFolder(folder);
+            }
         }
 
         /// <summary>
@@ -542,7 +533,7 @@ namespace MarsNote
         /// </summary>
         /// <param name="folder">The folder to delete.</param>
         /// <param name="requiresConfirmation">Whether or not the user has to confirm.</param>
-        public async void DeleteFolder(Folder folder, bool requiresConfirmation = true)
+        private async void DeleteFolder(Folder folder, bool requiresConfirmation = true)
         {
             if (folder == null) { return; }
 
@@ -571,30 +562,30 @@ namespace MarsNote
 
         public void RenameFolderFromListBoxItem(object sender)
         {
-            var btn = (Button)sender;
-            var folder = (Folder)btn.DataContext;
-            RenameFolder(folder);
+            var btn = sender as Button;
+            var folder = btn?.DataContext as Folder;
+            if (folder != null)
+            {
+                RenameFolder(folder);
+            }
         }
 
         /// <summary>
         /// Prompts the user to choose a new name for a <see cref="Folder"/>.
         /// </summary>
         /// <param name="folder">The folder to rename.</param>
-        public async void RenameFolder(Folder folder)
+        private async void RenameFolder(Folder folder)
         {
             if (folder == null) { return; }
 
             string newFolderName = await this.ShowInputAsync("Rename Folder", $"Enter a new name for the folder \'{folder.Name}\':", new MetroDialogSettings { AffirmativeButtonText = "Rename", NegativeButtonText = "Cancel" });
             if (string.IsNullOrWhiteSpace(newFolderName)) { return; }
 
-            foreach (Folder existingFolder in ((Profile)comboBox_profiles.SelectedItem).Folders)
+            if (((Profile)comboBox_profiles.SelectedItem).Folders.Any(existingFolder => existingFolder.Name == newFolderName))
             {
-                if (existingFolder.Name == newFolderName)
-                {
-                    // Profile with same name already exists
-                    await this.ShowMessageAsync("Rename Folder", "The name '" + newFolderName + "' is already in use by another folder. Please choose a different name and try again.");
-                    return;
-                }
+                // Folder with same name already exists
+                await this.ShowMessageAsync("Rename Folder", $"The name \'{newFolderName}\' is already in use by another folder. Please choose a different name and try again.");
+                return;
             }
             
             // Rename profile
@@ -606,7 +597,7 @@ namespace MarsNote
         /// <summary>
         /// Update the visibility of a series of UI messages based on selected items.
         /// </summary>
-        void UpdateMessages()
+        private void UpdateMessages()
         {
             if (LoadedProfiles == null) { return; }
             label_noProfiles.Visibility = LoadedProfiles.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
@@ -679,7 +670,7 @@ namespace MarsNote
         /// </summary>
         private void SaveUISettings()
         {
-            Settings.Save(GetUISettings());
+            GetUISettings().Save();
         }
 
         /// <summary>
@@ -706,7 +697,7 @@ namespace MarsNote
             ChangeSaveFileLocation(FileHelper.BrowseForFolder("Select a location for the MarsNote save files to be saved."));
         }
 
-        public enum NewSaveFileLocationMode { Overwrite, Load }
+        private enum NewSaveFileLocationMode { Overwrite, Load }
         /// <summary>
         /// Set a new save file location from the UI settings location.
         /// </summary>
@@ -714,44 +705,41 @@ namespace MarsNote
         private async void SetNewSaveFileLocationFromUI(NewSaveFileLocationMode mode)
         {
             Settings uiSettings = GetUISettings();
-            switch (mode)
+            if (mode == NewSaveFileLocationMode.Overwrite)
             {
-                case NewSaveFileLocationMode.Overwrite:
-                    {
-                        // Display restart message asynchronously
-                        Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote", "MarsNote will now restart to save the notes to the new save location.", MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
+                // Display restart message asynchronously
+                Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote", "MarsNote will now restart to save the notes to the new save location.", MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
 
-                        // Save in new location
-                        FileHelper.SaveProfiles(LoadedProfiles, Path.Combine(uiSettings.SaveFileLocation, FileHelper.DefaultSaveFileName));
+                // Save in new location
+                FileHelper.SaveProfiles(LoadedProfiles, Path.Combine(uiSettings.SaveFileLocation, FileHelper.DefaultSaveFileName));
 
-                        // Write new location to settings
-                        Settings.Save(uiSettings);
+                // Write new location to settings
+                uiSettings.Save();
 
-                        await restartMessage;
+                await restartMessage;
 
-                        // Restart app
-                        AppHelper.RestartApplication();
-                        break;
-                    }
-                case NewSaveFileLocationMode.Load:
-                    {
-                        // Display restart message asynchronously
-                        Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote", "MarsNote will now restart to load the notes from the new save location.", MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
+                // Restart app
+                AppHelper.RestartApplication();
+            }
+            else if (mode == NewSaveFileLocationMode.Load)
+            {
+                // Display restart message asynchronously
+                Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote", "MarsNote will now restart to load the notes from the new save location.", MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
 
-                        // Save in old location
-                        FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
+                // Save in old location
+                FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
 
-                        // Write new location to settings
-                        Settings.Save(uiSettings);
+                // Write new location to settings
+                uiSettings.Save();
 
-                        await restartMessage;
+                await restartMessage;
 
-                        // Restart app
-                        AppHelper.RestartApplication();
-                        break;
-                    }
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+                // Restart app
+                AppHelper.RestartApplication();
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
         }
 
@@ -793,6 +781,8 @@ namespace MarsNote
                     case MessageDialogResult.FirstAuxiliary:
                         // Cancel
                         return;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(result), result, "The value returned by ShowMessageAsync was outside of the acceptable values.");
                 }
             }
             else
@@ -819,11 +809,13 @@ namespace MarsNote
         private void LoadAccentsToSettings()
         {
             comboBox_settings_accentColour.Items.Clear();
-            foreach (var accent in ThemeManager.Accents)
+            foreach (Accent accent in ThemeManager.Accents)
             {
                 // Omit yellow as it causes text to be black on highlight, instead of white
                 if (accent.Name != "Yellow")
+                {
                     comboBox_settings_accentColour.Items.Add(accent.Name);
+                }
             }
         }
 
@@ -883,7 +875,7 @@ namespace MarsNote
             sb.AppendLine();
             sb.AppendLine();
             sb.AppendLine("Licensed under a Creative Commons Attribution-NonCommercial 4.0 International license.");
-            sb.AppendLine("Copyright © 2016 ACW Technologies");
+            sb.AppendLine("Copyright © 2017 ACW Technologies");
             
             MessageDialogResult result = await this.ShowMessageAsync("About MarsNote", sb.ToString(), MessageDialogStyle.AffirmativeAndNegative, new MetroDialogSettings { AffirmativeButtonText = "OK", NegativeButtonText = "View License" });
             if (result == MessageDialogResult.Negative)
@@ -895,13 +887,13 @@ namespace MarsNote
         // Help
         private void button_settings_help_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("http://acwtechnologies.co.uk/help/marsnote/?sender=mn");
+            Process.Start(FileHelper.HelpURL);
         }
 
         // Report issue
         private void button_settings_reportIssue_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/ACWTechnologiesAdmin/MarsNote/issues");
+            Process.Start(FileHelper.GitHubIssuesURL);
         }
         #endregion
     }

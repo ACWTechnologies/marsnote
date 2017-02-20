@@ -18,7 +18,7 @@ namespace MarsNote
 
         public static T DeserializePath<T>(string jsonPath, JsonSerializerSettings settings = null)
         {
-            if (!File.Exists(jsonPath)) { throw new ArgumentException("jsonUri"); }
+            if (!File.Exists(jsonPath)) { throw new ArgumentException("Json path does not exist.", nameof(jsonPath)); }
             return DeserializeString<T>(File.ReadAllText(jsonPath), settings);
         }
 

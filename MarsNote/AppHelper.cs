@@ -28,7 +28,8 @@ namespace MarsNote
         }
 
         /// <summary>
-        /// Get the current version of the network deployed application, formatted as 'major.minor[.build[.revision]]'.
+        /// Get the current version of the network deployed application, formatted as "major.minor[.build[.revision]]".
+        /// Returns "Unavailable" if the version could not be retrieved.
         /// </summary>
         public static string GetCurrentVersion()
         {
@@ -50,6 +51,9 @@ namespace MarsNote
         /// <param name="corners">The corners of the window to check.</param>
         public static bool AnyCornersOnScreen(this Window window, WindowCorners corners)
         {
+            if (window == null) { throw new ArgumentNullException(nameof(window)); }
+            if (corners == 0) { throw new ArgumentOutOfRangeException(nameof(corners), "There are no corners selected."); }
+
             // For each screen
             foreach (Screen screen in Screen.AllScreens)
             {
@@ -88,6 +92,9 @@ namespace MarsNote
         /// <param name="corners">The corners of the window to check.</param>
         public static bool AllCornersOnScreen(this Window window, WindowCorners corners)
         {
+            if (window == null) { throw new ArgumentNullException(nameof(window)); }
+            if (corners == 0) { throw new ArgumentOutOfRangeException(nameof(corners), "There are no corners selected."); }
+
             // For each screen
             foreach (Screen screen in Screen.AllScreens)
             {
@@ -126,6 +133,8 @@ namespace MarsNote
         /// <param name="window">The <see cref="Window"/> to center.</param>
         public static void CenterOnScreen(this Window window)
         {
+            if (window == null) { throw new ArgumentNullException(nameof(window)); }
+
             double screenWidth = SystemParameters.PrimaryScreenWidth;
             double screenHeight = SystemParameters.PrimaryScreenHeight;
             double windowWidth = window.Width;
@@ -142,7 +151,7 @@ namespace MarsNote
             try
             {
                 // Open the registry 'Run' subkey
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"))
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"))
                 {
                     // Return true if the 'MarsNote' key exists, and false if it does not
                     return key?.GetValue("MarsNote") != null;
@@ -165,7 +174,7 @@ namespace MarsNote
                 FileHelper.CreateFileAndDirectory(FileHelper.StartupFileLocation)?.Close();
             }
 
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
             {
                 key?.SetValue("MarsNote", $"\"{FileHelper.StartupFileLocation}\"");
             }
@@ -176,7 +185,7 @@ namespace MarsNote
         /// </summary>
         public static void RemoveCurrentUserStartup()
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
             {
                 key?.DeleteValue("MarsNote", false);
             }
