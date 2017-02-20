@@ -356,8 +356,7 @@ namespace MarsNote
 
         private async void button_removeNote_Click(object sender, RoutedEventArgs e)
         {
-            var selectedNote = (Note)listBox_notes.SelectedItem;
-            //var selectedNote = (Note)grid_editor.DataContext;
+            var selectedNote = listBox_notes.SelectedItem as Note;
             if (selectedNote == null) { return; }
             
             string message = string.IsNullOrWhiteSpace(selectedNote.Name) ? "Are you sure you want to delete this note? This action cannot be undone." : "Are you sure you want to delete the note '" + selectedNote.Name + "'? This action cannot be undone.";
@@ -366,7 +365,8 @@ namespace MarsNote
             if (deleteAskResult == MessageDialogResult.Affirmative)
             {
                 // Delete note
-                ((Folder)listBox_folders.SelectedItem).Notes.Remove(selectedNote);
+                var source = listBox_notes.ItemsSource as Collection<Note>;
+                source?.Remove(selectedNote);
             }
             UpdateMessages();
         }
@@ -388,14 +388,11 @@ namespace MarsNote
             string profileName = await this.ShowInputAsync("New Profile", "Enter a name for the new profile:", new MetroDialogSettings { AffirmativeButtonText = "Create", NegativeButtonText = "Cancel" });
             if (string.IsNullOrWhiteSpace(profileName)) { return; }
 
-            foreach (Profile profile in LoadedProfiles)
+            if (LoadedProfiles.Any(profile => profile.Name == profileName))
             {
-                if (profile.Name == profileName)
-                {
-                    // Profile with same name already exists
-                    await this.ShowMessageAsync("New Profile", $"The name \'{profileName}\' is already in use by another profile. Please choose a different name and try again.");
-                    return;
-                }
+                // Profile with same name already exists
+                await this.ShowMessageAsync("New Profile", $"The name \'{profileName}\' is already in use by another profile. Please choose a different name and try again.");
+                return;
             }
 
             // Create profile
@@ -439,7 +436,10 @@ namespace MarsNote
 
         private void button_deleteProfile_Click(object sender, RoutedEventArgs e)
         {
-            DeleteProfile((Profile)comboBox_profiles.SelectedItem);
+            if (comboBox_profiles.SelectedItem != null)
+            {
+                DeleteProfile(comboBox_profiles.SelectedItem as Profile);
+            }
         }
 
         /// <summary>
@@ -453,11 +453,13 @@ namespace MarsNote
 
             if (requiresConfirmation)
             {
+                const string confirmationText = "CONFIRM";
+
                 // User confirmation is required
                 string result = await this.ShowInputAsync("Delete Profile?",
-                    $"Are you sure you want to delete the profile \'{profile.Name}\'? This will delete ALL folders and notes inside this profile.\nType \"CONFIRM\" to confirm.", new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
+                    $"Are you sure you want to delete the profile \'{profile.Name}\'? This will delete ALL folders and notes inside this profile.\nType \"{confirmationText}\" to confirm.", new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
 
-                if (result == "CONFIRM")
+                if (result == confirmationText)
                 {
                     // User typed "CONFIRM" correctly, delete profile
                     LoadedProfiles.Remove(profile);
@@ -543,8 +545,9 @@ namespace MarsNote
                 
                 if (deleteAskResult == MessageDialogResult.Affirmative)
                 {
-                    // User confirmed, delete profile
-                    ((Profile)comboBox_profiles.SelectedItem).Folders.Remove(folder);
+                    // User confirmed, delete folder
+                    var source = listBox_folders.ItemsSource as Collection<Folder>;
+                    source?.Remove(folder);
                     FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
                     //UILoadProfiles(Profiles);
                 }
