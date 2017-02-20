@@ -59,6 +59,16 @@ namespace MarsNote
         }
 
         /// <summary>
+        /// Saves this instance of <see cref="Settings"/> to the settings file.
+        /// </summary>
+        public void Save()
+        {
+            string json = JsonHelper.Serialize(this);
+
+            FileHelper.Write(json, FileHelper.SettingsFileLocation);
+        }
+
+        /// <summary>
         /// Gets a new empty instance of <see cref="Settings"/>.
         /// </summary>
         public static Settings BlankSettings => new Settings(null, null, 0, null);
@@ -85,17 +95,6 @@ namespace MarsNote
             {
                 return BlankSettings;
             }
-        }
-
-        /// <summary>
-        /// Saves an instance of <see cref="Settings"/> to the settings file.
-        /// </summary>
-        /// <param name="settings"></param>
-        public static void Save(Settings settings)
-        {
-            string json = JsonHelper.Serialize(settings);
-
-            FileHelper.Write(json, FileHelper.SettingsFileLocation);
         }
     }
 }

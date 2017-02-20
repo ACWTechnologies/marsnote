@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace MarsNote
 {
     /// <summary>
-    /// A collection of <paramref name="Note"/>s.
+    /// A collection of <see cref="Note"/>s.
     /// </summary>
     public class Folder : INotifyPropertyChanged, IPinnable
     {
@@ -35,7 +35,7 @@ namespace MarsNote
             Pinned = pinned;
         }
 
-        public Folder(string name) : this(name, new ObservableCollection<Note>(), false) { }
+        public Folder(string name) : this(name, null, false) { }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
