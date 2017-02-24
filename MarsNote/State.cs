@@ -1,18 +1,24 @@
-﻿using Newtonsoft.Json;
+﻿using System.ComponentModel;
+using Newtonsoft.Json;
 
 namespace MarsNote
 {
-    public class State
+    public sealed class State
     {
-        public string Profile { get; set; }
-        public string Folder { get; set; }
-
         [JsonConstructor]
         public State(string profile, string folder)
         {
             Profile = profile;
             Folder = folder;
         }
+
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 2)]
+        public string Folder { get; set; }
+
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 1)]
+        public string Profile { get; set; }
 
         public static State Load()
         {

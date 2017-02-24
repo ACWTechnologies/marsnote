@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using System.Windows.Media.Converters;
 
 namespace MarsNote
 {
@@ -70,6 +71,8 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets the name of the note.
         /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 1)]
         public string Name
         {
             get
@@ -87,6 +90,8 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets the description of the note.
         /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 2)]
         public string Description
         {
             get
@@ -104,6 +109,8 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets the content of the note.
         /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 3)]
         public string Content
         {
             get
@@ -121,6 +128,9 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets the colour <see cref="Brush"/> of the note.
         /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 4)]
+        [JsonConverter(typeof(RGBHexBrushAllowFullyTransparentConverter))]
         public Brush Colour
         {
             get
@@ -129,7 +139,20 @@ namespace MarsNote
             }
             set
             {
-                _colour = value ?? Brushes.Transparent;
+                if (value != null)
+                {
+                    var scb = (SolidColorBrush)value;
+                    if (!Color.Equals(scb.Color, Brushes.Transparent.Color) && scb.Color.A != 255)
+                    {
+                        // Set the alpha channel to max, transparency is disallowed
+                        scb.Color = Color.FromArgb(255, scb.Color.R, scb.Color.G, scb.Color.B);
+                    }
+                    _colour = scb;
+                }
+                else
+                {
+                    _colour = Brushes.Transparent;
+                }
                 NotifyPropertyChanged();
                 Modified();
             }
@@ -154,6 +177,8 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets the last modified datetime of the note.
         /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 5)]
         public DateTime LastModified
         {
             get
@@ -170,6 +195,8 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets a value indicating whether the note is pinned.
         /// </summary>
+        [DefaultValue(false)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 6)]
         public bool Pinned
         {
             get

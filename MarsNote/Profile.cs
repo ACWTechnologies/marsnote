@@ -36,6 +36,7 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets the name of the profile.
         /// </summary>
+        [JsonProperty(Required = Required.Always, Order = 1)]
         public string Name
         {
             get
@@ -52,6 +53,8 @@ namespace MarsNote
         /// <summary>
         /// Gets or sets the folders included in the profile.
         /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 2)]
         public ObservableCollection<Folder> Folders
         {
             get
