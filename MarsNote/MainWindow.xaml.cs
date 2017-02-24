@@ -72,12 +72,13 @@ namespace MarsNote
 
             UILoadSettings(firstLoadSettings);
 
-            AppHelper.ChangeAccent((string)comboBox_settings_accentColour.SelectedItem);
+            AppHelper.ChangeAccent(firstLoadSettings.AccentColour);
 
             AddSettingsEventHandlers();
         }
 
         private readonly DispatcherTimer _autoSaveDt;
+
         private void AutoSaveDT_Tick(object sender, EventArgs e)
         {
             FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
@@ -207,10 +208,7 @@ namespace MarsNote
         private void UILoadProfiles(IEnumerable<Profile> profiles)
         {
             comboBox_profiles.ItemsSource = profiles;
-            // if (LoadedProfiles.Count > 0) { comboBox_profiles.SelectedIndex = 0; }
-            // else { comboBox_profiles.SelectedIndex = -1; }
-
-            if (profiles.Any()) { comboBox_profiles.SelectedIndex = 0; }
+            if (profiles != null && profiles.Any()) { comboBox_profiles.SelectedIndex = 0; }
             else { comboBox_profiles.SelectedIndex = -1; }
             UpdateMessages();
         }
@@ -222,6 +220,8 @@ namespace MarsNote
         {
             button_addFolder.IsEnabled = folders != null;
             listBox_folders.ItemsSource = folders;
+            if (folders != null && folders.Any()) { listBox_folders.SelectedIndex = 0; }
+            else { listBox_folders.SelectedIndex = -1; }
             UpdateMessages();
         }
 
@@ -233,6 +233,8 @@ namespace MarsNote
         {
             button_addNote.IsEnabled = notes != null;
             listBox_notes.ItemsSource = notes;
+            if (notes != null && notes.Any()) { listBox_notes.SelectedIndex = 0; }
+            else { listBox_notes.SelectedIndex = -1; }
             UpdateMessages();
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -84,7 +85,7 @@ namespace MarsNote
         /// <summary>
         /// Load the save file location from the settings file.
         /// </summary>
-        public static void LoadSaveFileLocation()
+        private static void LoadSaveFileLocation()
         {
             // Load settings into 's'
             Settings s = Settings.Load();
@@ -106,7 +107,7 @@ namespace MarsNote
         /// </summary>
         /// <param name="profiles">The profiles to save.</param>
         /// <param name="path">The file path to save the profiles to.</param>
-        public static void SaveProfiles(ObservableCollection<Profile> profiles, string path)
+        public static void SaveProfiles(IEnumerable<Profile> profiles, string path)
         {
             // If the collection of profiles is null, create a new empty collection
             if (profiles == null) { profiles = new ObservableCollection<Profile>(); }
@@ -211,22 +212,22 @@ namespace MarsNote
         /// Sorts a collection of profiles and returns the new sorted collection.
         /// </summary>
         /// <param name="profiles">The collection of profiles to sort.</param>
-        private static ObservableCollection<Profile> SortProfiles(ObservableCollection<Profile> profiles)
+        private static ObservableCollection<Profile> SortProfiles(IEnumerable<Profile> profiles)
         {
-            ObservableCollection<Profile> profilesDeepClone = JsonHelper.DeepClone(profiles);
+            var profilesDeepClone = new ObservableCollection<Profile>(JsonHelper.DeepClone(profiles));
 
             // Sort Profiles
-            profilesDeepClone = profilesDeepClone.Sort("Name", OrderType.Ascending);
-            
+            profilesDeepClone = profilesDeepClone.Sort(nameof(Profile.Name), OrderType.Ascending);
+
             foreach (Profile profile in profilesDeepClone)
             {
                 // Sort Folders
-                profile.Folders = profile.Folders.Sort("Name", OrderType.Ascending);
+                profile.Folders = profile.Folders.Sort(nameof(Folder.Name), OrderType.Ascending);
                 
                 foreach (Folder folder in profile.Folders)
                 {
                     // Sort notes
-                    folder.Notes = folder.Notes.Sort("LastModified", OrderType.Descending);
+                    folder.Notes = folder.Notes.Sort(nameof(Note.LastModified), OrderType.Descending);
                 }
             }
 
