@@ -53,8 +53,9 @@ namespace MarsNote
                 }
                 catch(Exception ex)
                 {
-                    MessageBox.Show("A fatal error occurred while reading the save data file. This is likely due to malformed or missing information." + Environment.NewLine + "The application will now exit. If this error continues to occur, please contact ACW Technologies support." + Environment.NewLine + Environment.NewLine + "Message:" +Environment.NewLine + ex.Message + Environment.NewLine + Environment.NewLine + "Save File Location: " + Environment.NewLine + "'" + FileHelper.SaveFileLocation + "'", "Save Data Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    Environment.Exit(1);
+                    MessageBox.Show( $"A fatal error occurred while reading the save data file. This is likely due to malformed or missing information.\nThe application will now exit. If this error continues to occur, please contact ACW Technologies support.\n\nMessage:\n{ex.Message}\n\nSave File Location:\n\'{FileHelper.SaveFileLocation}\'",
+                        "Save Data Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    AppHelper.ShutdownApplication(1);
                 }
 
                 UILoadProfiles(LoadedProfiles);
@@ -134,7 +135,8 @@ namespace MarsNote
             if (destinationProfile.Folders.Any(destinationFolder => destinationFolder.Name == folder.Name))
             {
                 // Destination profile contains a folder with the same name as the folder being moved
-                await this.ShowMessageAsync("Move Folder", $@"The profile '{destinationProfile.Name}' already contains a folder called '{folder.Name}'. Folder names must be unique.");
+                await this.ShowMessageAsync("Move Folder",
+                    $@"The profile '{destinationProfile.Name}' already contains a folder called '{folder.Name}'. Folder names must be unique.");
                 return;
             }
 
@@ -361,8 +363,11 @@ namespace MarsNote
             var selectedNote = listBox_notes.SelectedItem as Note;
             if (selectedNote == null) { return; }
             
-            string message = string.IsNullOrWhiteSpace(selectedNote.Name) ? "Are you sure you want to delete this note? This action cannot be undone." : "Are you sure you want to delete the note '" + selectedNote.Name + "'? This action cannot be undone.";
-            MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Note?", message, MessageDialogStyle.AffirmativeAndNegative, new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
+            string message = string.IsNullOrWhiteSpace(selectedNote.Name)
+                ? "Are you sure you want to delete this note? This action cannot be undone."
+                : "Are you sure you want to delete the note '" + selectedNote.Name + "'? This action cannot be undone.";
+            MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Note?", message,
+                MessageDialogStyle.AffirmativeAndNegative, new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
 
             if (deleteAskResult == MessageDialogResult.Affirmative)
             {
@@ -387,13 +392,16 @@ namespace MarsNote
 
         private async void button_addProfile_Click(object sender, RoutedEventArgs e)
         {
-            string profileName = await this.ShowInputAsync("New Profile", "Enter a name for the new profile:", new MetroDialogSettings { AffirmativeButtonText = "Create", NegativeButtonText = "Cancel" });
+            string profileName = await this.ShowInputAsync("New Profile",
+                "Enter a name for the new profile:",
+                new MetroDialogSettings { AffirmativeButtonText = "Create", NegativeButtonText = "Cancel" });
             if (string.IsNullOrWhiteSpace(profileName)) { return; }
 
             if (LoadedProfiles.Any(profile => profile.Name == profileName))
             {
                 // Profile with same name already exists
-                await this.ShowMessageAsync("New Profile", $"The name \'{profileName}\' is already in use by another profile. Please choose a different name and try again.");
+                await this.ShowMessageAsync("New Profile",
+                    $"The name \'{profileName}\' is already in use by another profile. Please choose a different name and try again.");
                 return;
             }
 
@@ -418,7 +426,9 @@ namespace MarsNote
         {
             if (profile == null) { return; }
 
-            string newProfileName = await this.ShowInputAsync("Rename Profile", $"Enter a new name for the profile \'{profile.Name}\':", new MetroDialogSettings { AffirmativeButtonText = "Rename", NegativeButtonText = "Cancel" });
+            string newProfileName = await this.ShowInputAsync("Rename Profile",
+                $"Enter a new name for the profile \'{profile.Name}\':",
+                new MetroDialogSettings { AffirmativeButtonText = "Rename", NegativeButtonText = "Cancel" });
             if (string.IsNullOrWhiteSpace(newProfileName)) { return; }
 
             foreach (Profile existingProfile in LoadedProfiles)
@@ -426,7 +436,8 @@ namespace MarsNote
                 if (existingProfile.Name == newProfileName)
                 {
                     // Profile with same name already exists
-                    await this.ShowMessageAsync("Rename Profile", $"The name \'{newProfileName}\' is already in use by another profile. Please choose a different name and try again.");
+                    await this.ShowMessageAsync("Rename Profile",
+                        $"The name \'{newProfileName}\' is already in use by another profile. Please choose a different name and try again.");
                     return;
                 }
             }
@@ -455,28 +466,47 @@ namespace MarsNote
 
             if (requiresConfirmation)
             {
-                const string confirmationText = "CONFIRM";
-
-                // User confirmation is required
-                string result = await this.ShowInputAsync("Delete Profile?",
-                    $"Are you sure you want to delete the profile \'{profile.Name}\'? This will delete ALL folders and notes inside this profile.\nType \"{confirmationText}\" to confirm.", new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
-
-                if (result == confirmationText)
+                if (profile.Folders.Any())
                 {
-                    // User typed "CONFIRM" correctly, delete profile
-                    LoadedProfiles.Remove(profile);
-                    FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
-                    UILoadProfiles(LoadedProfiles);
-                }
-                else if (string.IsNullOrWhiteSpace(result))
-                {
-                    // User pressed 'cancel' or entered no text
-                    return;
+                    const string confirmationText = "CONFIRM";
+
+                    // User confirmation is required
+                    string result = await this.ShowInputAsync("Delete Profile?",
+                        $"Are you sure you want to delete the profile \'{profile.Name}\'? This will delete ALL folders and notes inside this profile.\nType \"{confirmationText}\" to confirm.",
+                        new MetroDialogSettings {AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel"});
+
+                    if (result == confirmationText)
+                    {
+                        // User typed "CONFIRM" correctly, delete profile
+                        LoadedProfiles.Remove(profile);
+                        FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
+                        UILoadProfiles(LoadedProfiles);
+                    }
+                    else if (string.IsNullOrWhiteSpace(result))
+                    {
+                        // User pressed 'cancel' or entered no text
+                        return;
+                    }
+                    else
+                    {
+                        // User did not type "CONFIRM" correctly
+                        await this.ShowMessageAsync("Profile Not Deleted",
+                                "The confirmation text you entered did not match the required value. If you still wish to delete this profile, please try again.",
+                                MessageDialogStyle.Affirmative, new MetroDialogSettings {AffirmativeButtonText = "OK"});
+                    }
                 }
                 else
                 {
-                    // User did not type "CONFIRM" correctly
-                    await this.ShowMessageAsync("Profile Not Deleted", "The confirmation text you entered did not match the required value. If you still wish to delete this profile, please try again.", MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
+                    MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Profile?",
+                        $"Are you sure you want to delete the profile \'{profile.Name}\'?", MessageDialogStyle.AffirmativeAndNegative,
+                        new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
+
+                    if (deleteAskResult == MessageDialogResult.Affirmative)
+                    {
+                        LoadedProfiles.Remove(profile);
+                        FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
+                        UILoadProfiles(LoadedProfiles);
+                    }
                 }
             }
             else
@@ -543,7 +573,9 @@ namespace MarsNote
 
             if (requiresConfirmation)
             {
-                MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Folder?", $"Are you sure you want to delete the folder \'{folder.Name}\'? This will delete ALL notes inside this folder.", MessageDialogStyle.AffirmativeAndNegative, new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
+                MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Folder?",
+                    $"Are you sure you want to delete the folder \'{folder.Name}\'? This will delete ALL notes inside this folder.",
+                    MessageDialogStyle.AffirmativeAndNegative, new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
                 
                 if (deleteAskResult == MessageDialogResult.Affirmative)
                 {
@@ -583,7 +615,9 @@ namespace MarsNote
         {
             if (folder == null) { return; }
 
-            string newFolderName = await this.ShowInputAsync("Rename Folder", $"Enter a new name for the folder \'{folder.Name}\':", new MetroDialogSettings { AffirmativeButtonText = "Rename", NegativeButtonText = "Cancel" });
+            string newFolderName = await this.ShowInputAsync("Rename Folder",
+                $"Enter a new name for the folder \'{folder.Name}\':",
+                new MetroDialogSettings { AffirmativeButtonText = "Rename", NegativeButtonText = "Cancel" });
             if (string.IsNullOrWhiteSpace(newFolderName)) { return; }
 
             if (((Profile)comboBox_profiles.SelectedItem).Folders.Any(existingFolder => existingFolder.Name == newFolderName))
@@ -713,7 +747,9 @@ namespace MarsNote
             if (mode == NewSaveFileLocationMode.Overwrite)
             {
                 // Display restart message asynchronously
-                Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote", "MarsNote will now restart to save the notes to the new save location.", MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
+                Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote",
+                    "MarsNote will now restart to save the notes to the new save location.",
+                    MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
 
                 // Save in new location
                 FileHelper.SaveProfiles(LoadedProfiles, Path.Combine(uiSettings.SaveFileLocation, FileHelper.DefaultSaveFileName));
@@ -729,7 +765,9 @@ namespace MarsNote
             else if (mode == NewSaveFileLocationMode.Load)
             {
                 // Display restart message asynchronously
-                Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote", "MarsNote will now restart to load the notes from the new save location.", MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
+                Task<MessageDialogResult> restartMessage = this.ShowMessageAsync("Restart MarsNote",
+                    "MarsNote will now restart to load the notes from the new save location.",
+                    MessageDialogStyle.Affirmative, new MetroDialogSettings { AffirmativeButtonText = "OK" });
 
                 // Save in old location
                 FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
@@ -847,7 +885,8 @@ namespace MarsNote
             }
             catch (System.Security.SecurityException ex)
             {
-                Task<MessageDialogResult> errorMessage = this.ShowMessageAsync("Insufficient Permissions", "You do not have the permissions required to change this setting. This process requires access to the Windows Registry.\nError: " + ex.Message);
+                Task<MessageDialogResult> errorMessage = this.ShowMessageAsync("Insufficient Permissions",
+                    "You do not have the permissions required to change this setting. This process requires access to the Windows Registry.\nError: " + ex.Message);
                 // Remove events
                 toggleSwitch_settings_startOnWindowsStartup.Checked -= toggleSwitch_settings_startOnWindowsStartup_CheckChanged;
                 toggleSwitch_settings_startOnWindowsStartup.Unchecked -= toggleSwitch_settings_startOnWindowsStartup_CheckChanged;
