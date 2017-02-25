@@ -30,7 +30,7 @@
                         </DockPanel>
                         <Separator Margin="0,15"/>
                         <Label Content="Accent colour" FontSize="14" />
-                        <ComboBox x:Name="comboBox_settings_accentColour" Margin="0,0,0,10"/>
+                        <ComboBox x:Name="comboBox_settings_accentColour" ItemsSource="{Binding AvailableAccents}" Margin="0,0,0,10"/>
                         <Separator Margin="0,15"/>
                         <Label Content="Auto save" FontSize="14" />
                         <Label HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -51,6 +51,9 @@
                         <Separator Margin="0,15"/>
                         <Label Content="Save window position" FontSize="14" />
                         <metroControls:ToggleSwitch x:Name="toggleSwitch_settings_saveWindowPosition" />
+                        <Separator Margin="0,15"/>
+                        <Label Content="Always on top" FontSize="14" />
+                        <metroControls:ToggleSwitch x:Name="toggleSwitch_settings_alwaysOnTop" />
                         <Separator Margin="0,15"/>
                         <DockPanel>
                             <Button x:Name="button_settings_about" Style="{DynamicResource SquareButtonStyle}" Content="About" HorizontalAlignment="Left" VerticalAlignment="Top" Click="button_settings_about_Click" Margin="0,0,10,0" />

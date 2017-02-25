@@ -29,7 +29,9 @@ namespace MarsNote
             SaveWindowPosition = firstLoadSettings.SaveWindowPosition;
 
             InitializeComponent();
-            
+
+            settingsFlyout.DataContext = this;
+
             button_renameProfile.IsEnabled = button_deleteProfile.IsEnabled = false;
 
             // Assign an event handler to ContentRendered
@@ -62,23 +64,14 @@ namespace MarsNote
                 UILoadState(State.Load());
             }
 
-            LoadAccentsToSettings();
-
-            // Create a dispatcher timer for auto save
-            _autoSaveDt = new DispatcherTimer();
-            // Add an event handler to the Tick event
             _autoSaveDt.Tick += AutoSaveDT_Tick;
-            // Set the interval
-            ChangeAutoSaveInterval(firstLoadSettings.AutoSave);
-
+            
             UILoadSettings(firstLoadSettings);
-
-            AppHelper.ChangeAccent(firstLoadSettings.AccentColour);
 
             AddSettingsEventHandlers();
         }
 
-        private readonly DispatcherTimer _autoSaveDt;
+        private readonly DispatcherTimer _autoSaveDt = new DispatcherTimer();
 
         private void AutoSaveDT_Tick(object sender, EventArgs e)
         {
@@ -175,8 +168,7 @@ namespace MarsNote
         private void FirstTimeLaunch()
         {
             // Create the save file
-            FileStream newSaveFile = FileHelper.CreateFileAndDirectory(FileHelper.SaveFileLocation);
-            newSaveFile.Close();
+            FileHelper.CreateFileAndDirectory(FileHelper.SaveFileLocation).Close();
             // Create a new collection of profiles
             LoadedProfiles = new ObservableCollection<Profile>();
             // Add a profile, folder and preformatted introduction note
@@ -187,9 +179,6 @@ namespace MarsNote
             FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
             // Load the new collection of profiles into the UI
             UILoadProfiles(LoadedProfiles);
-            // Select the first folder and note (just added)
-            listBox_folders.SelectedIndex = 0;
-            listBox_notes.SelectedIndex = 0;
         }
 
         /// <summary>
@@ -300,11 +289,16 @@ namespace MarsNote
         {
             if (settings != null)
             {
+                ChangeAutoSaveInterval(settings.AutoSave);
+                Topmost = settings.AlwaysOnTop;
+                AppHelper.ChangeAccent(settings.AccentColour);
+
                 textBox_settings_saveFileLocation.Text = settings.SaveFileLocation;
                 comboBox_settings_accentColour.SelectedItem = settings.AccentColour;
                 numericUpDown_settings_autoSave.Value = settings.AutoSave;
                 toggleSwitch_settings_saveWindowPosition.IsChecked = settings.SaveWindowPosition;
                 toggleSwitch_settings_startOnWindowsStartup.IsChecked = settings.StartOnWindowsStartup;
+                toggleSwitch_settings_alwaysOnTop.IsChecked = settings.AlwaysOnTop;
             }
             else
             {
@@ -328,7 +322,6 @@ namespace MarsNote
         private void listBox_notes_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UILoadNote((Note)listBox_notes.SelectedItem);
-            FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
         }
         #endregion
         
@@ -464,6 +457,13 @@ namespace MarsNote
         {
             if (profile == null) { return; }
 
+            Action deleteProfile = () =>
+            {
+                LoadedProfiles.Remove(profile);
+                FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
+                UILoadProfiles(LoadedProfiles);
+            };
+
             if (requiresConfirmation)
             {
                 if (profile.Folders.Any())
@@ -478,9 +478,7 @@ namespace MarsNote
                     if (result == confirmationText)
                     {
                         // User typed "CONFIRM" correctly, delete profile
-                        LoadedProfiles.Remove(profile);
-                        FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
-                        UILoadProfiles(LoadedProfiles);
+                        deleteProfile();
                     }
                     else if (string.IsNullOrWhiteSpace(result))
                     {
@@ -503,18 +501,14 @@ namespace MarsNote
 
                     if (deleteAskResult == MessageDialogResult.Affirmative)
                     {
-                        LoadedProfiles.Remove(profile);
-                        FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
-                        UILoadProfiles(LoadedProfiles);
+                        deleteProfile();
                     }
                 }
             }
             else
             {
                 // User confirmation is not required
-                LoadedProfiles.Remove(profile);
-                FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
-                UILoadProfiles(LoadedProfiles);
+                deleteProfile();
             }
         }
         #endregion
@@ -571,6 +565,18 @@ namespace MarsNote
         {
             if (folder == null) { return; }
 
+            Action deleteFolder = () =>
+            {
+                var source = listBox_folders.ItemsSource as Collection<Folder>;
+                if (source != null)
+                {
+                    source.Remove(folder);
+                    FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
+                    if (source.Any()) { listBox_folders.SelectedIndex = 0; }
+                    else { listBox_folders.SelectedIndex = -1; }
+                }
+            };
+
             if (requiresConfirmation)
             {
                 MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Folder?",
@@ -580,18 +586,13 @@ namespace MarsNote
                 if (deleteAskResult == MessageDialogResult.Affirmative)
                 {
                     // User confirmed, delete folder
-                    var source = listBox_folders.ItemsSource as Collection<Folder>;
-                    source?.Remove(folder);
-                    FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
-                    //UILoadProfiles(Profiles);
+                    deleteFolder();
                 }
             }
             else
             {
                 // No confirmation required
-                ((Profile)comboBox_profiles.SelectedItem).Folders.Remove(folder);
-                FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
-                //UILoadProfiles(Profiles);
+                deleteFolder();
             }
 
             UpdateMessages();
@@ -700,7 +701,8 @@ namespace MarsNote
                 textBox_settings_saveFileLocation.Text,
                 (string)comboBox_settings_accentColour.SelectedItem,
                 (int)(numericUpDown_settings_autoSave.Value ?? 0),
-                toggleSwitch_settings_saveWindowPosition.IsChecked
+                toggleSwitch_settings_saveWindowPosition.IsChecked,
+                toggleSwitch_settings_alwaysOnTop.IsChecked
                 );
         }
 
@@ -723,6 +725,8 @@ namespace MarsNote
             toggleSwitch_settings_saveWindowPosition.Unchecked += toggleSwitch_settings_saveWindowPosition_CheckChanged;
             toggleSwitch_settings_startOnWindowsStartup.Checked += toggleSwitch_settings_startOnWindowsStartup_CheckChanged;
             toggleSwitch_settings_startOnWindowsStartup.Unchecked += toggleSwitch_settings_startOnWindowsStartup_CheckChanged;
+            toggleSwitch_settings_alwaysOnTop.Checked += toggleSwitch_settings_alwaysOnTop_CheckChanged;
+            toggleSwitch_settings_alwaysOnTop.Unchecked += toggleSwitch_settings_alwaysOnTop_CheckChanged;
         }
 
         // Save file location
@@ -847,18 +851,14 @@ namespace MarsNote
         }
 
         /// <summary>
-        /// Load all available accents from <see cref="ThemeManager.Accents"/> into the accents combobox.
+        /// Gets all available accents from <see cref="ThemeManager.Accents"/>.
         /// </summary>
-        private void LoadAccentsToSettings()
+        public IEnumerable<string> AvailableAccents
         {
-            comboBox_settings_accentColour.Items.Clear();
-            foreach (Accent accent in ThemeManager.Accents)
+            get
             {
                 // Omit yellow as it causes text to be black on highlight, instead of white
-                if (accent.Name != "Yellow")
-                {
-                    comboBox_settings_accentColour.Items.Add(accent.Name);
-                }
+                return from accent in ThemeManager.Accents where accent.Name != "Yellow" select accent.Name;
             }
         }
 
@@ -866,6 +866,13 @@ namespace MarsNote
         private void numericUpDown_settings_autoSave_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
         {
             ChangeAutoSaveInterval((int)(numericUpDown_settings_autoSave.Value ?? 0));
+            SaveUISettings();
+        }
+
+        // Always on top
+        private void toggleSwitch_settings_alwaysOnTop_CheckChanged(object sender, RoutedEventArgs e)
+        {
+            Topmost = toggleSwitch_settings_alwaysOnTop.IsChecked ?? false;
             SaveUISettings();
         }
 
