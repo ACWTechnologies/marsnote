@@ -29,11 +29,9 @@ namespace MarsNote
             SaveWindowPosition = firstLoadSettings.SaveWindowPosition;
 
             InitializeComponent();
-
+            
             settingsFlyout.DataContext = this;
-
-            button_renameProfile.IsEnabled = button_deleteProfile.IsEnabled = false;
-
+            
             // Assign an event handler to ContentRendered
             ContentRendered += MainWindow_ContentRendered;
             
@@ -310,8 +308,8 @@ namespace MarsNote
         #region Navigation Selection Changed
         private void comboBox_profiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            button_renameProfile.IsEnabled = button_deleteProfile.IsEnabled = comboBox_profiles.SelectedIndex != -1;
             UILoadFolders(((Profile)comboBox_profiles.SelectedItem)?.Folders);
+            FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
         }
 
         private void listBox_folders_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -347,7 +345,7 @@ namespace MarsNote
             {
                 listBox_notes.SelectedItem = n;
             }
-
+            FileHelper.SaveProfiles(LoadedProfiles, FileHelper.SaveFileLocation);
             UpdateMessages();
         }
 

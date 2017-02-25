@@ -5,6 +5,9 @@ using System.Windows.Data;
 
 namespace MarsNote
 {
+    /// <summary>
+    /// Converts a <see cref="DateTime"/> object to a string representation.
+    /// </summary>
     public class DateTimeToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -34,6 +37,10 @@ namespace MarsNote
         }
     }
 
+    /// <summary>
+    /// Returns <see cref="FontStyles.Italic"/> if note name is null or whitespace.
+    /// Else, returns <see cref="FontStyles.Normal"/>.
+    /// </summary>
     public class NoteNameStringToFontStyleConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -50,6 +57,10 @@ namespace MarsNote
         }
     }
 
+    /// <summary>
+    /// Returns "No Name" if note name is null or whitespace.
+    /// Else, returns the note name.
+    /// </summary>
     public class NoteNameStringToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -66,22 +77,10 @@ namespace MarsNote
         }
     }
 
-    public class ValueToBoolConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // Do the conversion from string to FontStyle
-            return string.IsNullOrWhiteSpace((string)value) ? "No Name" : value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // Do the conversion from FontStyle to string
-            // Not implemented as not requred -- oneway
-            return DependencyProperty.UnsetValue;
-        }
-    }
-
+    /// <summary>
+    /// Returns <see cref="Visibility.Visible"/> if bool is true.
+    /// Else, returns <see cref="Visibility.Collapsed"/>.
+    /// </summary>
     public class BoolToVisibilityCollapsedConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -98,6 +97,30 @@ namespace MarsNote
         }
     }
 
+    /// <summary>
+    /// Returns true if SelectedIndex is not -1.
+    /// Else, returns false;
+    /// </summary>
+    public class SelectedIndexToBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Do the conversion from int to bool
+            return (int)value != -1;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Do the conversion from bool to int
+            // Not implemented as not requred -- oneway
+            return DependencyProperty.UnsetValue;
+        }
+    }
+
+    /// <summary>
+    /// Returns <see cref="Visibility.Visible"/> if bool is true.
+    /// Else, returns <see cref="Visibility.Hidden"/>.
+    /// </summary>
     public class BoolToVisibilityHiddenConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
