@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 
 namespace MarsNote
 {
@@ -109,10 +110,11 @@ namespace MarsNote
         /// <param name="path">The file path to save the profiles to.</param>
         public static void SaveProfiles(IEnumerable<Profile> profiles, string path)
         {
-            // If the collection of profiles is null, create a new empty collection
-            if (profiles == null) { profiles = new ObservableCollection<Profile>(); }
-            // Serialise and write the profiles to the specified file path
-            Write(JsonHelper.Serialize(SortProfiles(profiles)), path);
+            Write(JsonHelper.Serialize(
+                profiles == null
+                ? new Collection<Profile>()
+                : SortProfiles(profiles)),
+            path);
         }
 
         /// <summary>
@@ -207,7 +209,7 @@ namespace MarsNote
 
             return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
         }
-
+        
         /// <summary>
         /// Sorts a collection of profiles and returns the new sorted collection.
         /// </summary>
@@ -216,18 +218,29 @@ namespace MarsNote
         {
             var profilesDeepClone = new ObservableCollection<Profile>(JsonHelper.DeepClone(profiles));
 
-            // Sort Profiles
-            profilesDeepClone = profilesDeepClone.Sort(nameof(Profile.Name), OrderType.Ascending);
+            if (profilesDeepClone.Count == 0) { return profilesDeepClone; }
+            else if (profilesDeepClone.Count > 1)
+            {
+                // Sort Profiles
+                profilesDeepClone = profilesDeepClone.Sort(nameof(Profile.Name), OrderType.Ascending);
+            }
 
             foreach (Profile profile in profilesDeepClone)
             {
-                // Sort Folders
-                profile.Folders = profile.Folders.Sort(nameof(Folder.Name), OrderType.Ascending);
-                
+                if (profile.Folders.Count == 0) { continue; }
+                else if (profile.Folders.Count > 1)
+                {
+                    // Sort Folders
+                    profile.Folders = profile.Folders.Sort(nameof(Folder.Name), OrderType.Ascending);
+                }
+
                 foreach (Folder folder in profile.Folders)
                 {
-                    // Sort notes
-                    folder.Notes = folder.Notes.Sort(nameof(Note.LastModified), OrderType.Descending);
+                    if (folder.Notes.Count > 1)
+                    {
+                        // Sort notes
+                        folder.Notes = folder.Notes.Sort(nameof(Note.LastModified), OrderType.Descending);
+                    }
                 }
             }
 

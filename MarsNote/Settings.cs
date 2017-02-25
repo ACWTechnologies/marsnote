@@ -8,27 +8,28 @@ namespace MarsNote
 {
     public sealed class Settings
     {
+        private const string DefaultAccentColour = "Red";
         private string _accentColour;
+        private bool _alwaysOnTop;
         private int _autoSave;
         private string _saveFileLocation;
         private bool _saveWindowPosition;
         private bool _startOnWindowsStartup;
 
-        private const string DefaultAccentColour = "Red";
-
         [JsonConstructor]
-        public Settings(string saveFileLocation, string accentColour, int autoSave, bool? saveWindowPosition)
+        public Settings(string saveFileLocation, string accentColour, int autoSave, bool? saveWindowPosition, bool? alwaysOnTop)
         {
             SaveFileLocation = saveFileLocation;
             AccentColour = accentColour;
             AutoSave = autoSave;
             SaveWindowPosition = saveWindowPosition ?? true;
+            AlwaysOnTop = alwaysOnTop ?? false;
         }
 
         /// <summary>
         /// Gets a new empty instance of <see cref="Settings"/>.
         /// </summary>
-        public static Settings BlankSettings => new Settings(null, null, 0, null);
+        public static Settings BlankSettings => new Settings(null, null, 0, null, false);
 
         [DefaultValue(DefaultAccentColour)]
         [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 2)]
@@ -41,6 +42,14 @@ namespace MarsNote
                 if (ThemeManager.Accents.Any(a => string.Equals(a.Name, value, StringComparison.OrdinalIgnoreCase))) { _accentColour = value == "Yellow" ? DefaultAccentColour : value; }
                 else { _accentColour = DefaultAccentColour; }
             }
+        }
+
+        [DefaultValue(false)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 5)]
+        public bool AlwaysOnTop
+        {
+            get { return _alwaysOnTop; }
+            set { _alwaysOnTop = value; }
         }
 
         [DefaultValue(0)]

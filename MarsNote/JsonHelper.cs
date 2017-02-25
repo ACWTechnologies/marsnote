@@ -68,20 +68,51 @@ namespace MarsNote
 
             var transparent = false;
 
-            if (input.Length == 3)
+            switch (input.Length)
             {
-                // #123 --> #112233
-                char[] sixDigit = {input[0], input[0], input[1], input[1], input[2], input[2]};
-                input = new string(sixDigit);
-            }
-            else if (input.Length != 6)
-            {
-                if (input.Length == 8 && input[0] == '0' && input[1] == '0')
+                case 3:
                 {
-                    // #00XXXXXX
-                    transparent = true;
+                    // #XYZ --> #XXYYZZ
+                    char[] threeToSixDigit = {input[0], input[0], input[1], input[1], input[2], input[2]};
+                    input = new string(threeToSixDigit);
+                    break;
                 }
-                else
+                case 4:
+                {
+                    if (input[0] == '0')
+                    {
+                        // #0XXX
+                        transparent = true;
+                    }
+                    else
+                    {
+                        // #WXYZ --> #XXYYZZ
+                        char[] fourToSixDigit = {input[1], input[1], input[2], input[2], input[3], input[3]};
+                        input = new string(fourToSixDigit);
+                    }
+                    break;
+                }
+                case 6:
+                {
+                    // Correct length
+                    break;
+                }
+                case 8:
+                {
+                    if (input[0] == '0' && input[1] == '0')
+                    {
+                        // #00XXXXXX
+                        transparent = true;
+                    }
+                    else
+                    {
+                        // #XXXXXXXX
+                        // Remove first 2 characters
+                        input = input.Substring(2);
+                    }
+                    break;
+                }
+                default:
                 {
                     throw new JsonSerializationException("RGB not valid length.");
                 }
@@ -113,7 +144,7 @@ namespace MarsNote
             var brush = value as Brush;
             if (brush != null)
             {
-                Color color = ((SolidColorBrush) brush).Color;
+                Color color = ((SolidColorBrush)brush).Color;
                 string hex = color.A == 0
                     ? "#00FFFFFF"
                     : $"#{color.R:X2}{color.G:X2}{color.B:X2}";
