@@ -141,6 +141,7 @@ namespace MarsNote
         
         private void MainWindow_ContentRendered(object sender, EventArgs e)
         {
+            richTextBox_content.ResetUndoQueue();
             if (this.AnyCornersOnScreen(AppHelper.WindowCorners.TopLeft | AppHelper.WindowCorners.TopRight)) { return; }
 
             // Window loaded off screen, most likely because of SaveWindowPosition setting
@@ -238,8 +239,7 @@ namespace MarsNote
             grid_editor.IsEnabled = stackPanel_noteButtons.IsEnabled = note != null;
 
             // Reset the undo queue
-            richTextBox_content.UndoLimit = 0;
-            richTextBox_content.UndoLimit = -1;
+            richTextBox_content.ResetUndoQueue();
         }
 
         /// <summary>

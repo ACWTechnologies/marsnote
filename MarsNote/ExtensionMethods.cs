@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MarsNote
@@ -27,6 +28,18 @@ namespace MarsNote
             return profiles
                 .SelectMany(profile => profile.Folders)
                 .Any(folder => folder.Notes.Contains(note));
+        }
+
+        /// <summary>
+        /// Resets the undo queue of the RichTextBox.
+        /// </summary>
+        /// <param name="rtb">The RichTextBox to have its undo queue reset.</param>
+        public static void ResetUndoQueue(this System.Windows.Controls.RichTextBox rtb)
+        {
+            if (rtb == null) { throw new ArgumentNullException(nameof(rtb)); }
+
+            rtb.IsUndoEnabled = false;
+            rtb.IsUndoEnabled = true;
         }
     }
 }
