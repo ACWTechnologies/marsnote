@@ -8,6 +8,9 @@
         xmlns:metroControls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d"
         Title="MarsNote" Height="550" MinHeight="550" Width="950" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="window_main_Closing" BorderThickness="0" GlowBrush="Black" Icon="MarsNote-Favicon.ico">
+    <metroControls:MetroWindow.Resources>
+        <local:SelectedIndexToBoolConverter x:Key="SelectedIndexToBoolConverter" />
+    </metroControls:MetroWindow.Resources>
     <metroControls:MetroWindow.Flyouts>
         <metroControls:FlyoutsControl>
             <metroControls:Flyout x:Name="settingsFlyout" Header="Settings" Position="Right" Width="300">
@@ -69,8 +72,8 @@
                     <ComboBox x:Name="comboBox_profiles" DisplayMemberPath="Name" VerticalAlignment="Top" SelectionChanged="comboBox_profiles_SelectionChanged" Margin="0,0,0,10"/>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Button x:Name="button_addProfile" Style="{DynamicResource SquareButtonStyle}" Content="Add" Margin="0,0,10,0" Click="button_addProfile_Click" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                        <Button x:Name="button_renameProfile" Style="{DynamicResource SquareButtonStyle}" Content="Rename" Margin="0,0,10,0" Click="button_renameProfile_Click" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                        <Button x:Name="button_deleteProfile" Style="{DynamicResource SquareButtonStyle}" Content="Delete" Click="button_deleteProfile_Click" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                        <Button x:Name="button_renameProfile" IsEnabled="{Binding SelectedIndex, ElementName=comboBox_profiles, Converter={StaticResource SelectedIndexToBoolConverter}, Mode=OneWay}" Style="{DynamicResource SquareButtonStyle}" Content="Rename" Margin="0,0,10,0" Click="button_renameProfile_Click" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                        <Button x:Name="button_deleteProfile" IsEnabled="{Binding SelectedIndex, ElementName=comboBox_profiles, Converter={StaticResource SelectedIndexToBoolConverter}, Mode=OneWay}" Style="{DynamicResource SquareButtonStyle}" Content="Delete" Click="button_deleteProfile_Click" HorizontalAlignment="Left" VerticalAlignment="Top" />
                     </StackPanel>
                     <Label>
                         <TextBlock x:Name="label_noProfiles" Text="It appears you don't have any profiles, add one to start making folders and notes." TextWrapping="WrapWithOverflow"/>
@@ -149,7 +152,7 @@
                 </xctk:WatermarkTextBox.ContextMenu>
             </xctk:WatermarkTextBox>
             <TextBlock x:Name="textBlock_modified" HorizontalAlignment="Right" TextWrapping="NoWrap" Text="{Binding LastModified, Converter={StaticResource DateTimeToStringConverter}}" VerticalAlignment="Top" Margin="0,10,15,0" Foreground="#FF707070" Height="19" TextAlignment="Right"/>
-            <xctk:RichTextBox x:Name="richTextBox_content" BorderBrush="{DynamicResource AccentColorBrush}" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" BorderThickness="1" Margin="5,98,5,0">
+            <xctk:RichTextBox x:Name="richTextBox_content" BorderBrush="{DynamicResource AccentColorBrush}" Text="{Binding Content, UpdateSourceTrigger=PropertyChanged}" AcceptsTab="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" BorderThickness="1" Margin="5,98,5,0">
                 <RichTextBox.ContextMenu>
                     <ContextMenu>
                         <MenuItem Command="ApplicationCommands.Cut" />
