@@ -4,36 +4,47 @@ using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ListBox = System.Windows.Forms.ListBox;
 
 namespace MarsNote
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : MetroWindow
+    public partial class MainWindow : MetroWindow, INotifyPropertyChanged
     {
         private ObservableCollection<Profile> LoadedProfiles;
-        
+        private ObservableCollection<Note> _searchNotesCollection;
+        private bool _searchNotesPermitted;
+        private bool _searchNotesEnabled;
+        private bool _searchNotesTyping;
+        private readonly DispatcherTimer _autoSaveDt = new DispatcherTimer();
+
         public MainWindow()
         {
             Settings firstLoadSettings = Settings.Load();
             SaveWindowPosition = firstLoadSettings.SaveWindowPosition;
 
             InitializeComponent();
-            
-            settingsFlyout.DataContext = this;
-            
+
             // Assign an event handler to ContentRendered
             ContentRendered += MainWindow_ContentRendered;
+
+            DataContext = this;
+
+            grid_noSearchNotesResults.Visibility = Visibility.Collapsed;
             
             UILoadNote(null);
             UILoadNotes(null);
@@ -67,9 +78,57 @@ namespace MarsNote
             UILoadSettings(firstLoadSettings);
 
             AddSettingsEventHandlers();
+
+            SearchNotesPermitted = true;
         }
 
-        private readonly DispatcherTimer _autoSaveDt = new DispatcherTimer();
+        
+        public ObservableCollection<Note> SearchNotesCollection
+        {
+            get { return _searchNotesCollection ?? (_searchNotesCollection = new ObservableCollection<Note>()); }
+            set
+            {
+                _searchNotesCollection = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public bool SearchNotesPermitted
+        {
+            get { return _searchNotesPermitted; }
+            set
+            {
+                _searchNotesPermitted = value;
+                NotifyPropertyChanged();
+            }
+        }
+        
+        public bool SearchNotesOpen
+        {
+            get { return _searchNotesEnabled; }
+            set
+            {
+                _searchNotesEnabled = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public bool SearchNotesTyping
+        {
+            get { return _searchNotesTyping; }
+            set
+            {
+                _searchNotesTyping = value;
+                NotifyPropertyChanged();
+            }
+        }
+        
+        public event PropertyChangedEventHandler PropertyChanged;
+        
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         private void AutoSaveDT_Tick(object sender, EventArgs e)
         {
@@ -221,7 +280,7 @@ namespace MarsNote
         /// <param name="notes">The collection of notes.</param>
         private void UILoadNotes(IEnumerable<Note> notes)
         {
-            button_addNote.IsEnabled = notes != null;
+            button_addNote.IsEnabled = !SearchNotesTyping && notes != null;
             listBox_notes.ItemsSource = notes;
             if (notes != null && notes.Any()) { listBox_notes.SelectedIndex = 0; }
             else { listBox_notes.SelectedIndex = -1; }
@@ -314,6 +373,8 @@ namespace MarsNote
 
         private void listBox_folders_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            //SearchNotesPermitted = listBox_folders.SelectedIndex > -1;
+            if (SearchNotesTyping) { CancelNotesSearch(); }
             UILoadNotes(((Folder)listBox_folders.SelectedItem)?.Notes);
         }
 
@@ -322,7 +383,74 @@ namespace MarsNote
             UILoadNote((Note)listBox_notes.SelectedItem);
         }
         #endregion
-        
+
+        #region Notes Search
+
+        private void NotesSearch(string query)
+        {
+            SearchNotesCollection.Clear();
+            ObservableCollection<Note> selectedFolderNotes = ((Folder)listBox_folders.SelectedItem)?.Notes;
+            if (selectedFolderNotes != null)
+            {
+                foreach (Note note in selectedFolderNotes)
+                {
+                    if (note.Name.IndexOf(query, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                    {
+                        SearchNotesCollection.Add(note);
+                    }
+                }
+            }
+            grid_noSearchNotesResults.Visibility = SearchNotesCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            UILoadNotes(SearchNotesCollection);
+        }
+
+        private void CancelNotesSearch()
+        {
+            grid_noSearchNotesResults.Visibility = Visibility.Collapsed;
+            textBox_searchNotes.Text = string.Empty;
+            if (!grid_searchNotes.ChildHasFocus(this)) { SearchNotesOpen = false; }
+            UILoadNotes(((Folder)listBox_folders.SelectedItem)?.Notes);
+        }
+
+        private void grid_searchNotes_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter) { textBox_searchNotes.Focus(); }
+        }
+
+        private void button_searchNotes_Click(object sender, RoutedEventArgs e)
+        {
+            if (SearchNotesOpen) { textBox_searchNotes.Focus(); }
+            else { SearchNotesOpen = true; }
+        }
+
+        private void button_cancelSearchNotes_Click(object sender, RoutedEventArgs e)
+        {
+            CancelNotesSearch();
+        }
+
+        private void textBox_searchNotes_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(textBox_searchNotes.Text))
+            {
+                SearchNotesTyping = true;
+                NotesSearch(textBox_searchNotes.Text);
+            }
+            else
+            {
+                SearchNotesTyping = false;
+                CancelNotesSearch();
+            }
+        }
+
+        private void grid_searchNotes_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (SearchNotesTyping) { return; }
+            if (grid_searchNotes.ChildHasFocus(this)) { return; }
+            SearchNotesOpen = false;
+        }
+
+        #endregion
+
         #region Notes
         private void button_addNote_Click(object sender, RoutedEventArgs e)
         {
@@ -666,7 +794,7 @@ namespace MarsNote
                         // Folder Selected
                         grid_noFolderSelected.Visibility = Visibility.Collapsed;
 
-                        if (((Folder)listBox_folders.SelectedItem).Notes.Count == 0)
+                        if (((Folder)listBox_folders.SelectedItem).Notes.Count == 0 && !SearchNotesTyping)
                         {
                             // Empty folder
                             grid_folderEmpty.Visibility = Visibility.Visible;

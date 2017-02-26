@@ -21,6 +21,9 @@
             <local:NoteNameStringToFontStyleConverter x:Key="NoteNameStringToFontStyleConverter" />
             <local:NoteNameStringToStringConverter x:Key="NoteNameStringToStringConverter" />
             <local:BoolToVisibilityCollapsedConverter x:Key="BoolToVisibilityCollapsedConverter" />
+            <local:OneWayToSource_SelectedIndexToBoolConverter x:Key="OneWayToSource_SelectedIndexToBoolConverter" />
+            <local:BoolToIntConverter x:Key="BoolToIntConverter" />
+            <local:InvertBooleanConverter x:Key="InvertBooleanConverter" />
 
             <SolidColorBrush x:Key="PathIconSquareFillNormal" Color="#FF000000" />
             <SolidColorBrush x:Key="PathIconSquareFillMouseOver" Color="#FF000000" />

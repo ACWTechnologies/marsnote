@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:MarsNote"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:metroControls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="MarsNote" Height="550" MinHeight="550" Width="950" MinWidth="800" WindowStartupLocation="CenterScreen" Closing="window_main_Closing" BorderThickness="0" GlowBrush="Black" Icon="MarsNote-Favicon.ico">
     <metroControls:MetroWindow.Resources>
@@ -20,7 +21,7 @@
                         <Label HorizontalAlignment="Left" VerticalAlignment="Top">
                             <TextBlock Text="This is where all notes will be loaded from and saved to (mn-save.json file)." TextWrapping="WrapWithOverflow"/>
                         </Label>
-                        <TextBox x:Name="textBox_settings_saveFileLocation" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" Margin="0,0,0,10" IsReadOnly="True" >
+                        <TextBox x:Name="textBox_settings_saveFileLocation" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text, Mode=OneWay}" Margin="0,0,0,10" IsReadOnly="True" >
                             <TextBox.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Command="ApplicationCommands.Copy" />
@@ -33,7 +34,7 @@
                         </DockPanel>
                         <Separator Margin="0,15"/>
                         <Label Content="Accent colour" FontSize="14" />
-                        <ComboBox x:Name="comboBox_settings_accentColour" ItemsSource="{Binding AvailableAccents}" Margin="0,0,0,10"/>
+                        <ComboBox x:Name="comboBox_settings_accentColour" ItemsSource="{Binding AvailableAccents, Mode=OneWay}" Margin="0,0,0,10"/>
                         <Separator Margin="0,15"/>
                         <Label Content="Auto save" FontSize="14" />
                         <Label HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -85,9 +86,9 @@
     <metroControls:MetroWindow.RightWindowCommands>
         <metroControls:WindowCommands>
             <ToggleButton Content="Profiles" 
-        IsChecked="{Binding ElementName=profilesFlyout, Path=IsOpen}" Cursor="Hand"/>
+        IsChecked="{Binding ElementName=profilesFlyout, Path=IsOpen, Mode=TwoWay}" Cursor="Hand"/>
             <ToggleButton Content="Settings" 
-        IsChecked="{Binding ElementName=settingsFlyout, Path=IsOpen}" Cursor="Hand"/>
+        IsChecked="{Binding ElementName=settingsFlyout, Path=IsOpen, Mode=TwoWay}" Cursor="Hand"/>
         </metroControls:WindowCommands>
     </metroControls:MetroWindow.RightWindowCommands>
     <Grid x:Name="grid_main">
@@ -113,12 +114,39 @@
         <!-- Profiles/Folders Column -->
 
         <TextBlock x:Name="textBlock_title_folders" Style="{StaticResource TextBlockTitleStyle}" Text="Folders" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.Row="0" Grid.Column="0" Margin="15,10,0,0"/>
-        <ListBox x:Name="listBox_folders" ItemTemplate="{StaticResource FolderListBoxItem}" Grid.Row="0" Grid.Column="0" Background="Transparent" BorderThickness="0" Margin="5,34,5,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" SelectionChanged="listBox_folders_SelectionChanged"/>
+        <ListBox x:Name="listBox_folders" ItemTemplate="{StaticResource FolderListBoxItem}" Grid.Row="0" Grid.Column="0" Background="Transparent" BorderThickness="0" Margin="5,40,5,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" SelectionChanged="listBox_folders_SelectionChanged" SelectedIndex="{Binding SearchNotesPermitted, Converter={StaticResource OneWayToSource_SelectedIndexToBoolConverter}, Mode=OneWayToSource}"/>
         <!-- END Profiles/Folders Column -->
 
         <!-- Notes Column -->
         <TextBlock x:Name="textBlock_title_notes" Style="{StaticResource TextBlockTitleStyle}" HorizontalAlignment="Left" Text="Notes" VerticalAlignment="Top" Grid.Row="0" Grid.Column="2" Margin="15,10,0,0"/>
-        <ListBox x:Name="listBox_notes" ItemTemplate="{StaticResource NoteListBoxItem}" Grid.Column="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Grid.Row="0" Margin="5,34,5,0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="Transparent" SelectionChanged="listBox_notes_SelectionChanged" BorderThickness="0" />
+        <Grid Grid.Row="0" Grid.Column="2" x:Name="grid_searchNotes" Margin="67,10,5,0" Visibility="{Binding SearchNotesPermitted, Converter={StaticResource BoolToVisibilityCollapsedConverter}, Mode=OneWay}" VerticalAlignment="Top" LostFocus="grid_searchNotes_LostFocus" PreviewKeyDown="grid_searchNotes_PreviewKeyDown">
+            <xctk:WatermarkTextBox x:Name="textBox_searchNotes" Watermark="Search" Visibility="{Binding SearchNotesOpen, Converter={StaticResource BoolToVisibilityCollapsedConverter}, Mode=OneWay}" Margin="0,0,22,0" VerticalAlignment="Top" Height="25" TextChanged="textBox_searchNotes_TextChanged" AutoWordSelection="True" MaxLines="1"/>
+            <Button x:Name="button_searchNotes" Style="{DynamicResource SquareButtonStyle}" HorizontalAlignment="Right" VerticalAlignment="Top" IsEnabled="{Binding SearchNotesTyping, Converter={StaticResource InvertBooleanConverter}}" BorderBrush="#FFABADB3" Click="button_searchNotes_Click">
+                <Button.BorderThickness>
+                    <Binding Path="SearchNotesOpen" Converter="{StaticResource BoolToIntConverter}" Mode="OneWay">
+                        <Binding.ConverterParameter>
+                            <x:Array Type="system:Int32">
+                                <system:Int32>1</system:Int32>
+                                <system:Int32>0</system:Int32>
+                            </x:Array>
+                        </Binding.ConverterParameter>
+                    </Binding>
+                </Button.BorderThickness>
+                <Rectangle Width="13" Height="13">
+                    <Rectangle.Fill>
+                        <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_magnify}" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+            <Button x:Name="button_cancelSearchNotes" Style="{DynamicResource SquareButtonStyle}" Visibility="{Binding SearchNotesTyping, Converter={StaticResource BoolToVisibilityCollapsedConverter}, Mode=OneWay}" HorizontalAlignment="Right" VerticalAlignment="Top" BorderBrush="#FFABADB3" BorderThickness="1" Click="button_cancelSearchNotes_Click" >
+                <Rectangle Width="13" Height="13">
+                    <Rectangle.Fill>
+                        <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_close}" />
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+        </Grid>
+        <ListBox x:Name="listBox_notes" ItemTemplate="{StaticResource NoteListBoxItem}" Grid.Column="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Grid.Row="0" Margin="5,40,5,0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="Transparent" SelectionChanged="listBox_notes_SelectionChanged" BorderThickness="0" />
         <StackPanel Margin="5,5,5,5" Grid.Column="2" Grid.Row="1" Orientation="Horizontal">
             <Button x:Name="button_addNote" Style="{DynamicResource MetroCircleButtonStyle}" HorizontalAlignment="Left" VerticalAlignment="Top" Click="button_addNote_Click" Width="50" Height="50" Margin="0,0,10,0">
                 <Rectangle Width="20" Height="20">
@@ -220,6 +248,15 @@
                 </Label>
                 <Button x:Name="button_folderEmpty_addNote" Content="Add a note" HorizontalAlignment="Center" VerticalAlignment="Top" Click="button_folderEmpty_addNote_Click"/>
             </StackPanel>
+        </Grid>
+        <Grid x:Name="grid_noSearchNotesResults" Margin="5,34,5,0" Grid.Row="0" Grid.Column="2" VerticalAlignment="Top">
+            <Label IsEnabled="False" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" TextTrimming="CharacterEllipsis">
+                    <Run>No search results for</Run>
+                    <LineBreak />
+                    <Run Text="{Binding Text, ElementName=textBox_searchNotes, StringFormat='&quot;{0}&quot;'}" />
+                </TextBlock>
+            </Label>
         </Grid>
         <Grid x:Name="grid_noFolderSelected" Margin="5,34,5,0" Grid.Row="0" Grid.Column="2">
             <Label IsEnabled="False" HorizontalAlignment="Center" VerticalAlignment="Center">
