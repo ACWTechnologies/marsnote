@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace MarsNote
 {
@@ -40,6 +43,22 @@ namespace MarsNote
 
             rtb.IsUndoEnabled = false;
             rtb.IsUndoEnabled = true;
+        }
+
+        /// <summary>
+        /// Checks if any of the specified <see cref="Panel"/>'s children has current logical focus within the specified focus scope.
+        /// </summary>
+        /// <param name="panel">The panel for which all children should be searched for focus.</param>
+        /// <param name="element">The focus scope.</param>
+        public static bool ChildHasFocus(this Panel panel, DependencyObject element)
+        {
+            if (panel == null) { throw new ArgumentNullException(nameof(panel)); }
+            if (element == null) { throw new ArgumentNullException(nameof(element)); }
+
+            if (panel.Children.Count < 1) { return false; }
+
+            IInputElement focusedElement = FocusManager.GetFocusedElement(element);
+            return focusedElement != null && panel.Children.Cast<object>().Any(child => focusedElement == child);
         }
     }
 }

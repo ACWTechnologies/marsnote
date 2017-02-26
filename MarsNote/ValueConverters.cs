@@ -118,6 +118,49 @@ namespace MarsNote
     }
 
     /// <summary>
+    /// Returns true if SelectedIndex is not -1.
+    /// Else, returns false;
+    /// </summary>
+    public class OneWayToSource_SelectedIndexToBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Do the conversion from bool to int
+            // Not implemented as not requred -- onewaytosource
+            return DependencyProperty.UnsetValue;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Do the conversion from int to bool
+            return (int)value != -1;
+        }
+    }
+
+    /// <summary>
+    /// Returns parameter[0] if bool is true.
+    /// Else, returns parameter[1].
+    /// </summary>
+    public class BoolToIntConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var values = parameter as int[];
+            if (values == null) { throw new ArgumentException("Integer array parameter required.", nameof(parameter)); }
+
+            // Do the conversion from bool to int
+            return (bool)value ? values[0] : values[1];
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Do the conversion from int to bool
+            // Not implemented as not requred -- oneway
+            return DependencyProperty.UnsetValue;
+        }
+    }
+
+    /// <summary>
     /// Returns <see cref="Visibility.Visible"/> if bool is true.
     /// Else, returns <see cref="Visibility.Hidden"/>.
     /// </summary>
@@ -134,6 +177,24 @@ namespace MarsNote
             // Do the conversion from Visibility to bool
             // Not implemented as not requred -- oneway
             return DependencyProperty.UnsetValue;
+        }
+    }
+
+    /// <summary>
+    /// Inverts a boolean value.
+    /// </summary>
+    public class InvertBooleanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Invert bool
+            return !(bool)value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Invert bool
+            return !(bool)value;
         }
     }
 }
