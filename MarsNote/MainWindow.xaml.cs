@@ -1,9 +1,9 @@
 ﻿using MahApps.Metro;
-using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -16,14 +16,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using ListBox = System.Windows.Forms.ListBox;
 
 namespace MarsNote
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : MetroWindow, INotifyPropertyChanged
+    public partial class MainWindow : INotifyPropertyChanged
     {
         private ObservableCollection<Profile> LoadedProfiles;
         private ObservableCollection<Note> _searchNotesCollection;
@@ -37,13 +36,13 @@ namespace MarsNote
             Settings firstLoadSettings = Settings.Load();
             SaveWindowPosition = firstLoadSettings.SaveWindowPosition;
 
+            DataContext = this;
+
             InitializeComponent();
 
             // Assign an event handler to ContentRendered
             ContentRendered += MainWindow_ContentRendered;
-
-            DataContext = this;
-
+            
             grid_noSearchNotesResults.Visibility = Visibility.Collapsed;
             
             UILoadNote(null);
@@ -123,6 +122,35 @@ namespace MarsNote
             }
         }
         
+        /// <summary>
+        /// Returns all folders that don't contain the specified note.
+        /// </summary>
+        /// <param name="note">The note to check for.</param>
+        public IEnumerable<Folder> GetFoldersWithoutNote(Note note)
+        {
+            if (note == null) { throw new ArgumentNullException(nameof(note));}
+
+            foreach(Folder f in listBox_folders.ItemsSource)
+            {
+                if (!f.Notes.Contains(note)) { yield return f; }
+            }
+        }
+
+        /// <summary>
+        /// Returns all profiles that don't contain the specified folder.
+        /// </summary>
+        /// <param name="folder">The folder to check for.</param>
+        /// <returns></returns>
+        public IEnumerable<Profile> GetProfilesWithoutFolder(Folder folder)
+        {
+            if (folder == null) { throw new ArgumentNullException(nameof(folder)); }
+
+            foreach (Profile p in comboBox_profiles.ItemsSource)
+            {
+                if (!p.Folders.Contains(folder)) { yield return p; }
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
         
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
@@ -150,20 +178,42 @@ namespace MarsNote
         /// Move a <see cref="Note"/> from one <see cref="Folder"/> to another.
         /// </summary>
         /// <param name="note">The note to move.</param>
-        /// <param name="sourceFolder">The folder to move the note from.</param>
+        /// <param name="sourceFolder">The folder to move the note from. Should be null if unknown.</param>
         /// <param name="destinationFolder">The folder to move the note to.</param>
         public void MoveNoteToAnotherFolder(Note note, Folder sourceFolder, Folder destinationFolder)
         {
             if (note == null) { throw new ArgumentNullException(nameof(note)); }
-            if (sourceFolder == null) { throw new ArgumentNullException(nameof(sourceFolder)); }
             if (destinationFolder == null) { throw new ArgumentNullException(nameof(destinationFolder)); }
             if (ReferenceEquals(sourceFolder, destinationFolder)) { return; }
+
+            if (sourceFolder == null)
+            {
+                foreach (Folder f in listBox_folders.ItemsSource)
+                {
+                    if (f.Notes.Contains(note))
+                    {
+                        sourceFolder = f;
+                        break;
+                    }
+                }
+
+                if (sourceFolder == null)
+                {
+                    return;
+                }
+            }
+
             if (!sourceFolder.Notes.Contains(note)) { throw new ArgumentException("Source folder does not contain the note to be moved.", nameof(sourceFolder)); }
 
             // Insert note to the start of the destination folder
             destinationFolder.Notes.Insert(0, note);
             // Remove the note from the source folder
             sourceFolder.Notes.Remove(note);
+
+            if (SearchNotesTyping)
+            {
+                NotesSearch(textBox_searchNotes.Text);
+            }
 
             UpdateMessages();
         }
@@ -177,9 +227,26 @@ namespace MarsNote
         public async void MoveFolderToAnotherProfile(Folder folder, Profile sourceProfile, Profile destinationProfile)
         {
             if (folder == null) { throw new ArgumentNullException(nameof(folder)); }
-            if (sourceProfile == null) { throw new ArgumentNullException(nameof(sourceProfile)); }
             if (destinationProfile == null) { throw new ArgumentNullException(nameof(destinationProfile)); }
             if (ReferenceEquals(sourceProfile, destinationProfile)) { return; }
+
+            if (sourceProfile == null)
+            {
+                foreach (Profile p in comboBox_profiles.ItemsSource)
+                {
+                    if (p.Folders.Contains(folder))
+                    {
+                        sourceProfile = p;
+                        break;
+                    }
+                }
+
+                if (sourceProfile == null)
+                {
+                    return;
+                }
+            }
+
             if (!sourceProfile.Folders.Contains(folder)) { throw new ArgumentException("Source profile does not contain the folder to be moved.", nameof(sourceProfile)); }
 
             if (destinationProfile.Folders.Any(destinationFolder => destinationFolder.Name == folder.Name))
@@ -388,6 +455,8 @@ namespace MarsNote
 
         private void NotesSearch(string query)
         {
+            SearchNotesCollection.CollectionChanged -= SearchNotesCollection_CollectionChanged;
+
             SearchNotesCollection.Clear();
             ObservableCollection<Note> selectedFolderNotes = ((Folder)listBox_folders.SelectedItem)?.Notes;
             if (selectedFolderNotes != null)
@@ -400,12 +469,33 @@ namespace MarsNote
                     }
                 }
             }
+            SearchNotesCollection.CollectionChanged += SearchNotesCollection_CollectionChanged;
             grid_noSearchNotesResults.Visibility = SearchNotesCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             UILoadNotes(SearchNotesCollection);
         }
 
+        private void SearchNotesCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            // If item added or removed from search list, add/remove it from selected folder notes.
+            if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (Note item in e.OldItems)
+                {
+                    ((Folder)listBox_folders.SelectedItem)?.Notes.Remove(item);
+                }
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (Note item in e.NewItems)
+                {
+                    ((Folder)listBox_folders.SelectedItem)?.Notes.Add(item);
+                }
+            }
+        }
+
         private void CancelNotesSearch()
         {
+            SearchNotesCollection.CollectionChanged -= SearchNotesCollection_CollectionChanged;
             grid_noSearchNotesResults.Visibility = Visibility.Collapsed;
             textBox_searchNotes.Text = string.Empty;
             if (!grid_searchNotes.ChildHasFocus(this)) { SearchNotesOpen = false; }
@@ -477,24 +567,64 @@ namespace MarsNote
             UpdateMessages();
         }
 
-        private async void button_removeNote_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Deletes a <see cref="Note"/>, with or without confirmation from the user.
+        /// </summary>
+        /// <param name="note">The note to delete.</param>
+        /// <param name="collection">The collection that contains the note. Should be null if unknown.</param>
+        /// <param name="requiresConfirmation">Whether or not the user has to confirm.</param>
+        public async void DeleteNote(Note note, Collection<Note> collection, bool requiresConfirmation = true)
+        {
+            if (note == null) { return; }
+
+            Action deleteNote = () =>
+            {
+                // ReSharper disable once AccessToModifiedClosure
+                collection?.Remove(note);
+            };
+
+            if (collection == null)
+            {
+                collection = listBox_notes.ItemsSource as Collection<Note>;
+                if (collection == null) { return; }
+            }
+
+            if (!collection.Contains(note))
+            {
+                throw new ArgumentException("Source collection does not contain the note to be deleted.", nameof(collection));
+            }
+
+            if (requiresConfirmation)
+            {
+                string message = string.IsNullOrWhiteSpace(note.Name)
+                ? "Are you sure you want to delete this note? This action cannot be undone."
+                : "Are you sure you want to delete the note '" + note.Name + "'? This action cannot be undone.";
+                MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Note?", message,
+                    MessageDialogStyle.AffirmativeAndNegative, new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
+
+                if (deleteAskResult == MessageDialogResult.Affirmative)
+                {
+                    // Delete note
+                    deleteNote();
+                }
+            }
+            else
+            {
+                // No confirmation required
+                deleteNote();
+            }
+
+            UpdateMessages();
+        }
+        
+        private void button_removeNote_Click(object sender, RoutedEventArgs e)
         {
             var selectedNote = listBox_notes.SelectedItem as Note;
             if (selectedNote == null) { return; }
-            
-            string message = string.IsNullOrWhiteSpace(selectedNote.Name)
-                ? "Are you sure you want to delete this note? This action cannot be undone."
-                : "Are you sure you want to delete the note '" + selectedNote.Name + "'? This action cannot be undone.";
-            MessageDialogResult deleteAskResult = await this.ShowMessageAsync("Delete Note?", message,
-                MessageDialogStyle.AffirmativeAndNegative, new MetroDialogSettings { AffirmativeButtonText = "Delete", NegativeButtonText = "Cancel" });
+            var source = listBox_notes.ItemsSource as Collection<Note>;
+            if (source == null) { return; }
 
-            if (deleteAskResult == MessageDialogResult.Affirmative)
-            {
-                // Delete note
-                var source = listBox_notes.ItemsSource as Collection<Note>;
-                source?.Remove(selectedNote);
-            }
-            UpdateMessages();
+            DeleteNote(selectedNote, source, true);
         }
 
         private async void button_shareNote_Click(object sender, RoutedEventArgs e)
@@ -672,22 +802,12 @@ namespace MarsNote
             listBox_folders.SelectedItem = f;
         }
 
-        public void DeleteFolderFromListBoxItem(object sender)
-        {
-            var btn = sender as Button;
-            var folder = btn?.DataContext as Folder;
-            if (folder != null)
-            {
-                DeleteFolder(folder);
-            }
-        }
-
         /// <summary>
         /// Deletes a <see cref="Folder"/>, with or without confirmation from the user.
         /// </summary>
         /// <param name="folder">The folder to delete.</param>
         /// <param name="requiresConfirmation">Whether or not the user has to confirm.</param>
-        private async void DeleteFolder(Folder folder, bool requiresConfirmation = true)
+        public async void DeleteFolder(Folder folder, bool requiresConfirmation = true)
         {
             if (folder == null) { return; }
 
@@ -724,21 +844,11 @@ namespace MarsNote
             UpdateMessages();
         }
 
-        public void RenameFolderFromListBoxItem(object sender)
-        {
-            var btn = sender as Button;
-            var folder = btn?.DataContext as Folder;
-            if (folder != null)
-            {
-                RenameFolder(folder);
-            }
-        }
-
         /// <summary>
         /// Prompts the user to choose a new name for a <see cref="Folder"/>.
         /// </summary>
         /// <param name="folder">The folder to rename.</param>
-        private async void RenameFolder(Folder folder)
+        public async void RenameFolder(Folder folder)
         {
             if (folder == null) { return; }
 

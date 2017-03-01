@@ -171,6 +171,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ValueConverterGroup.cs" />
     <Compile Include="ValueConverters.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
