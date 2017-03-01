@@ -1,9 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Converters;
 
 namespace MarsNote
 {
@@ -66,6 +67,19 @@ namespace MarsNote
         private void Modified()
         {
             if (_readyForModification) { LastModified = DateTime.Now; }
+        }
+
+        /// <summary>
+        /// Gets a collection of folders that this note can move to.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<Folder> MoveFolders
+        {
+            get
+            {
+                var window = Application.Current.MainWindow as MainWindow;
+                return window?.GetFoldersWithoutNote(this);
+            }
         }
 
         /// <summary>

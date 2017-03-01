@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 
 namespace MarsNote
 {
@@ -7,14 +8,72 @@ namespace MarsNote
     /// </summary>
     public partial class App : Application
     {
-        private void button_folderListBoxItem_delete_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Gets the data context from a sender.
+        /// </summary>
+        /// <typeparam name="T">The type of the data context.</typeparam>
+        /// <param name="sender">The <see cref="FrameworkElement"/> that created the event.</param>
+        private static T GetDataContextFromSender<T>(object sender) where T : class
         {
-            (Current.MainWindow as MainWindow)?.DeleteFolderFromListBoxItem(sender);
+            var control = sender as FrameworkElement;
+            return control?.DataContext as T;
         }
 
-        private void button_folderListBoxItem_rename_Click(object sender, RoutedEventArgs e)
+        #region FolderListBoxItem
+
+        private void folderListBoxItem_delete_Click(object sender, RoutedEventArgs e)
         {
-            (Current.MainWindow as MainWindow)?.RenameFolderFromListBoxItem(sender);
+            var folder = GetDataContextFromSender<Folder>(sender);
+            if (folder != null)
+            {
+                (Current.MainWindow as MainWindow)?.DeleteFolder(folder, true);
+            }
         }
+
+        private void folderListBoxItem_rename_Click(object sender, RoutedEventArgs e)
+        {
+            var folder = GetDataContextFromSender<Folder>(sender);
+            if (folder != null)
+            {
+                (Current.MainWindow as MainWindow)?.RenameFolder(folder);
+            }
+        }
+
+        private void folderListBoxItem_move_Click(object sender, RoutedEventArgs e)
+        {
+            var folder = GetDataContextFromSender<Folder>(sender);
+            var destinationProfile = (e.OriginalSource as MenuItem)?.DataContext as Profile;
+
+            if (folder != null && destinationProfile != null)
+            {
+                (Current.MainWindow as MainWindow)?.MoveFolderToAnotherProfile(folder, null, destinationProfile);
+            }
+        }
+
+        #endregion
+
+        #region NoteListBoxItem
+
+        private void noteListBoxItem_delete_Click(object sender, RoutedEventArgs e)
+        {
+            var note = GetDataContextFromSender<Note>(sender);
+            if (note != null)
+            {
+                (Current.MainWindow as MainWindow)?.DeleteNote(note, null, true);
+            }
+        }
+
+        private void noteListBoxItem_move_Click(object sender, RoutedEventArgs e)
+        {
+            var note = GetDataContextFromSender<Note>(sender);
+            var destinationFolder = (e.OriginalSource as MenuItem)?.DataContext as Folder;
+
+            if (note != null && destinationFolder != null)
+            {
+                (Current.MainWindow as MainWindow)?.MoveNoteToAnotherFolder(note, null, destinationFolder);
+            }
+        }
+
+        #endregion
     }
 }

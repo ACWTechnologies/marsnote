@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using Newtonsoft.Json;
 
 namespace MarsNote
@@ -39,6 +40,19 @@ namespace MarsNote
         public Folder(string name) : this(name, null, false) { }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Gets a collection of profiles that this folder can move to.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<Profile> MoveProfiles
+        {
+            get
+            {
+                var window = Application.Current.MainWindow as MainWindow;
+                return window?.GetProfilesWithoutFolder(this);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the name of the folder.
