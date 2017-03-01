@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -216,6 +217,30 @@ namespace MarsNote
             }
 
             UpdateMessages();
+        }
+
+        public void DuplicateNote(Note note)
+        {
+            var source = listBox_notes.ItemsSource as Collection<Note>;
+            if (source?.Contains(note) ?? false)
+            {
+                Note duplicatedNote = JsonHelper.DeepClone(note);
+                var r = new Regex(@"^.* +\((\d{1,7})\)$");
+                Match match = r.Match(duplicatedNote.Name);
+                if (match.Success)
+                {
+                    uint currentNumber = Convert.ToUInt32(match.Groups[1].Value);
+                    unchecked { currentNumber++; }
+                    int index = duplicatedNote.Name.LastIndexOf('(');
+                    duplicatedNote.Name = duplicatedNote.Name.Substring(0, index) + "(" + currentNumber + ")";
+                }
+                else
+                {
+                    duplicatedNote.Name += " (1)";
+                }
+                duplicatedNote.LastModified = DateTime.Now;
+                source.Insert(0, duplicatedNote);
+            }
         }
 
         /// <summary>
@@ -488,7 +513,7 @@ namespace MarsNote
             {
                 foreach (Note item in e.NewItems)
                 {
-                    ((Folder)listBox_folders.SelectedItem)?.Notes.Add(item);
+                    ((Folder)listBox_folders.SelectedItem)?.Notes.Insert(e.NewStartingIndex, item);
                 }
             }
         }

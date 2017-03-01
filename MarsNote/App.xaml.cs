@@ -54,15 +54,12 @@ namespace MarsNote
 
         #region NoteListBoxItem
 
-        private void noteListBoxItem_delete_Click(object sender, RoutedEventArgs e)
+        private void menuItem_noteListBoxItem_duplicate_Click(object sender, RoutedEventArgs e)
         {
             var note = GetDataContextFromSender<Note>(sender);
-            if (note != null)
-            {
-                (Current.MainWindow as MainWindow)?.DeleteNote(note, null, true);
-            }
+            (Current.MainWindow as MainWindow)?.DuplicateNote(note);
         }
-
+        
         private void noteListBoxItem_move_Click(object sender, RoutedEventArgs e)
         {
             var note = GetDataContextFromSender<Note>(sender);
@@ -71,6 +68,15 @@ namespace MarsNote
             if (note != null && destinationFolder != null)
             {
                 (Current.MainWindow as MainWindow)?.MoveNoteToAnotherFolder(note, null, destinationFolder);
+            }
+        }
+
+        private void noteListBoxItem_delete_Click(object sender, RoutedEventArgs e)
+        {
+            var note = GetDataContextFromSender<Note>(sender);
+            if (note != null)
+            {
+                (Current.MainWindow as MainWindow)?.DeleteNote(note, null, true);
             }
         }
 
