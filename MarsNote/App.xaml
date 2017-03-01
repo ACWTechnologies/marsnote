@@ -147,6 +147,7 @@
                     </Grid.ColumnDefinitions>
                     <Grid.ContextMenu>
                         <ContextMenu>
+                            <MenuItem x:Name="menuItem_noteListBoxItem_duplicate" Header="Duplicate" Click="menuItem_noteListBoxItem_duplicate_Click" />
                             <MenuItem x:Name="menuItem_noteListBoxItem_pinned" Header="Pinned" IsCheckable="True" IsChecked="{Binding Pinned, Mode=TwoWay}" />
                             <MenuItem x:Name="menuItem_noteListBoxItem_move" Header="Move to..." Click="noteListBoxItem_move_Click" ItemsSource="{Binding MoveFolders, Converter={StaticResource MoveNoteItemsSourceConverter}, Mode=OneWay}">
                                 <MenuItem.ItemContainerStyle>
