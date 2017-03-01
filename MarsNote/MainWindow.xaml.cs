@@ -40,9 +40,6 @@ namespace MarsNote
             DataContext = this;
 
             InitializeComponent();
-
-            // Assign an event handler to ContentRendered
-            ContentRendered += MainWindow_ContentRendered;
             
             grid_noSearchNotesResults.Visibility = Visibility.Collapsed;
             
@@ -64,9 +61,11 @@ namespace MarsNote
                 }
                 catch(Exception ex)
                 {
-                    MessageBox.Show( $"A fatal error occurred while reading the save data file. This is likely due to malformed or missing information.\nThe application will now exit. If this error continues to occur, please contact ACW Technologies support.\n\nMessage:\n{ex.Message}\n\nSave File Location:\n\'{FileHelper.SaveFileLocation}\'",
+                    MessageBox.Show($"A fatal error occurred while reading the save data file. This is likely due to malformed or missing information.\nThe application will now exit. If this error continues to occur, please contact ACW Technologies support.\n\nMessage:\n{ex.Message}\n\nSave File Location:\n\'{FileHelper.SaveFileLocation}\'",
                         "Save Data Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Closing -= window_main_Closing;
                     AppHelper.ShutdownApplication(1);
+                    return;
                 }
 
                 UILoadProfiles(LoadedProfiles);
@@ -219,16 +218,33 @@ namespace MarsNote
             UpdateMessages();
         }
 
+        /// <summary>
+        /// Duplicates the specified note.
+        /// </summary>
+        /// <param name="note">The note to duplicate.</param>
         public void DuplicateNote(Note note)
         {
             var source = listBox_notes.ItemsSource as Collection<Note>;
             if (source?.Contains(note) ?? false)
             {
                 Note duplicatedNote = JsonHelper.DeepClone(note);
-                var r = new Regex(@"^.* +\((\d{1,7})\)$");
+
+                /* RegEx to match a note name ending with a number in a bracket
+                 * 
+                 * Start
+                 * Zero or more of any character
+                 * One space
+                 * Open bracket
+                 * Between 1 and 7 numerical digits (capture group 1)
+                 * Close bracket
+                 * End
+                */
+                var r = new Regex(@"^.* \((\d{1,7})\)$");
                 Match match = r.Match(duplicatedNote.Name);
+
                 if (match.Success)
                 {
+                    // Note name already has number in bracket, so increment number
                     uint currentNumber = Convert.ToUInt32(match.Groups[1].Value);
                     unchecked { currentNumber++; }
                     int index = duplicatedNote.Name.LastIndexOf('(');
@@ -302,7 +318,7 @@ namespace MarsNote
             this.CenterOnScreen();
         }
 
-        private void window_main_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void window_main_Closing(object sender, CancelEventArgs e)
         {
             // Save state to file
             State.Save(((Profile)comboBox_profiles.SelectedItem)?.Name, ((Folder)listBox_folders.SelectedItem)?.Name);
@@ -504,16 +520,29 @@ namespace MarsNote
             // If item added or removed from search list, add/remove it from selected folder notes.
             if (e.Action == NotifyCollectionChangedAction.Remove)
             {
+                ObservableCollection<Note> notes = ((Folder)listBox_folders.SelectedItem)?.Notes;
+                if (notes == null) { return; }
+
                 foreach (Note item in e.OldItems)
                 {
-                    ((Folder)listBox_folders.SelectedItem)?.Notes.Remove(item);
+                    notes.Remove(item);
                 }
             }
             else if (e.Action == NotifyCollectionChangedAction.Add)
             {
+                ObservableCollection<Note> notes = ((Folder)listBox_folders.SelectedItem)?.Notes;
+                if (notes == null) { return; }
+
                 foreach (Note item in e.NewItems)
                 {
-                    ((Folder)listBox_folders.SelectedItem)?.Notes.Insert(e.NewStartingIndex, item);
+                    if (e.NewStartingIndex == 0)
+                    {
+                        notes.Insert(0, item);
+                    }
+                    else
+                    {
+                        notes.Add(item);
+                    }
                 }
             }
         }

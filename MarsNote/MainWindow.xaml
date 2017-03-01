@@ -8,7 +8,7 @@
         xmlns:metroControls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="MarsNote" Height="550" MinHeight="550" Width="950" MinWidth="800" d:DataContext="{d:DesignInstance local:MainWindow}" WindowStartupLocation="CenterScreen" Closing="window_main_Closing" BorderThickness="0" GlowBrush="Black" Icon="MarsNote-Favicon.ico">
+        Title="MarsNote" Height="550" MinHeight="550" Width="950" MinWidth="800" d:DataContext="{d:DesignInstance local:MainWindow}" WindowStartupLocation="CenterScreen" Closing="window_main_Closing" ContentRendered="MainWindow_ContentRendered" BorderThickness="0" GlowBrush="Black" Icon="MarsNote-Favicon.ico">
     <metroControls:MetroWindow.Resources>
         <local:SelectedIndexToBoolConverter x:Key="SelectedIndexToBoolConverter" />
         <local:OneWayToSource_SelectedIndexToBoolConverter x:Key="OneWayToSource_SelectedIndexToBoolConverter" />
@@ -22,7 +22,7 @@
                         <Label HorizontalAlignment="Left" VerticalAlignment="Top">
                             <TextBlock Text="This is where all notes will be loaded from and saved to (mn-save.json file)." TextWrapping="WrapWithOverflow"/>
                         </Label>
-                        <TextBox x:Name="textBox_settings_saveFileLocation" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text, Mode=OneWay}" Margin="0,0,0,10" IsReadOnly="True" >
+                        <TextBox x:Name="textBox_settings_saveFileLocation" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}, Mode=OneWay}" Margin="0,0,0,10" IsReadOnly="True" >
                             <TextBox.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Command="ApplicationCommands.Copy" />

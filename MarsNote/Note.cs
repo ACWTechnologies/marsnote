@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
+using Newtonsoft.Json;
 
 namespace MarsNote
 {
@@ -14,14 +14,9 @@ namespace MarsNote
     public class Note : INotifyPropertyChanged, IPinnable
     {
         /// <summary>
-        /// Private member for <see cref="Name"/>.
+        /// Private member for <see cref="Colour"/>.
         /// </summary>
-        private string _name;
-
-        /// <summary>
-        /// Private member for <see cref="Description"/>.
-        /// </summary>
-        private string _description;
+        private Brush _colour;
 
         /// <summary>
         /// Private member for <see cref="Content"/>.
@@ -29,14 +24,19 @@ namespace MarsNote
         private string _content;
 
         /// <summary>
-        /// Private member for <see cref="Colour"/>.
+        /// Private member for <see cref="Description"/>.
         /// </summary>
-        private Brush _colour;
+        private string _description;
 
         /// <summary>
         /// Private member for <see cref="LastModified"/>.
         /// </summary>
         private DateTime _lastModified;
+
+        /// <summary>
+        /// Private member for <see cref="Name"/>.
+        /// </summary>
+        private string _name;
 
         /// <summary>
         /// Private member for <see cref="Pinned"/>.
@@ -64,78 +64,19 @@ namespace MarsNote
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void Modified()
-        {
-            if (_readyForModification) { LastModified = DateTime.Now; }
-        }
-
         /// <summary>
-        /// Gets a collection of folders that this note can move to.
+        /// Gets or sets the colour <see cref="Color"/> of the note.
         /// </summary>
         [JsonIgnore]
-        public IEnumerable<Folder> MoveFolders
+        public Color ColorColour
         {
             get
             {
-                var window = Application.Current.MainWindow as MainWindow;
-                return window?.GetFoldersWithoutNote(this);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the name of the note.
-        /// </summary>
-        [DefaultValue(null)]
-        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 1)]
-        public string Name
-        {
-            get
-            {
-                return _name;
+                return ((SolidColorBrush)Colour).Color;
             }
             set
             {
-                _name = value ?? string.Empty;
-                NotifyPropertyChanged();
-                Modified();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the description of the note.
-        /// </summary>
-        [DefaultValue(null)]
-        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 2)]
-        public string Description
-        {
-            get
-            {
-                return _description;
-            }
-            set
-            {
-                _description = value ?? string.Empty;
-                NotifyPropertyChanged();
-                Modified();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the content of the note.
-        /// </summary>
-        [DefaultValue(null)]
-        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 3)]
-        public string Content
-        {
-            get
-            {
-                return _content;
-            }
-            set
-            {
-                _content = value ?? string.Empty;
-                NotifyPropertyChanged();
-                Modified();
+                Colour = new SolidColorBrush(value);
             }
         }
 
@@ -173,18 +114,40 @@ namespace MarsNote
         }
 
         /// <summary>
-        /// Gets or sets the colour <see cref="Color"/> of the note.
+        /// Gets or sets the content of the note.
         /// </summary>
-        [JsonIgnore]
-        public Color ColorColour
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 3)]
+        public string Content
         {
             get
             {
-                return ((SolidColorBrush)Colour).Color;
+                return _content;
             }
             set
             {
-                Colour = new SolidColorBrush(value);
+                _content = value ?? string.Empty;
+                NotifyPropertyChanged();
+                Modified();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the description of the note.
+        /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 2)]
+        public string Description
+        {
+            get
+            {
+                return _description;
+            }
+            set
+            {
+                _description = value ?? string.Empty;
+                NotifyPropertyChanged();
+                Modified();
             }
         }
 
@@ -207,6 +170,38 @@ namespace MarsNote
         }
 
         /// <summary>
+        /// Gets a collection of folders that this note can move to.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<Folder> MoveFolders
+        {
+            get
+            {
+                var window = Application.Current.MainWindow as MainWindow;
+                return window?.GetFoldersWithoutNote(this);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the name of the note.
+        /// </summary>
+        [DefaultValue(null)]
+        [JsonProperty(Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate, Order = 1)]
+        public string Name
+        {
+            get
+            {
+                return _name;
+            }
+            set
+            {
+                _name = value ?? string.Empty;
+                NotifyPropertyChanged();
+                Modified();
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the note is pinned.
         /// </summary>
         [DefaultValue(false)]
@@ -224,7 +219,10 @@ namespace MarsNote
             }
         }
 
-        public string ToJson() => JsonHelper.Serialize(this);
+        private void Modified()
+        {
+            if (_readyForModification) { LastModified = DateTime.Now; }
+        }
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {

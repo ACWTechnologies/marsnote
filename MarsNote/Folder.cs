@@ -107,8 +107,6 @@ namespace MarsNote
             }
         }
 
-        public string ToJson() => JsonHelper.Serialize(this);
-
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

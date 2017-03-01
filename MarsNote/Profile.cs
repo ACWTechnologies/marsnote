@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 
 namespace MarsNote
 {
@@ -12,14 +12,14 @@ namespace MarsNote
     public class Profile : INotifyPropertyChanged
     {
         /// <summary>
-        /// Private member for <see cref="Name"/>.
-        /// </summary>
-        private string _name;
-
-        /// <summary>
         /// Private member for <see cref="Folders"/>.
         /// </summary>
         private ObservableCollection<Folder> _folders;
+
+        /// <summary>
+        /// Private member for <see cref="Name"/>.
+        /// </summary>
+        private string _name;
 
         [JsonConstructor]
         public Profile(string name, ObservableCollection<Folder> folders)
@@ -32,23 +32,6 @@ namespace MarsNote
         public Profile(string name) : this(name, new ObservableCollection<Folder>()) { }
 
         public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Gets or sets the name of the profile.
-        /// </summary>
-        [JsonProperty(Required = Required.Always, Order = 1)]
-        public string Name
-        {
-            get
-            {
-                return _name;
-            }
-            set
-            {
-                _name = value;
-                NotifyPropertyChanged();
-            }
-        }
 
         /// <summary>
         /// Gets or sets the folders included in the profile.
@@ -68,7 +51,22 @@ namespace MarsNote
             }
         }
 
-        public string ToJson() => JsonHelper.Serialize(this);
+        /// <summary>
+        /// Gets or sets the name of the profile.
+        /// </summary>
+        [JsonProperty(Required = Required.Always, Order = 1)]
+        public string Name
+        {
+            get
+            {
+                return _name;
+            }
+            set
+            {
+                _name = value;
+                NotifyPropertyChanged();
+            }
+        }
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
         {

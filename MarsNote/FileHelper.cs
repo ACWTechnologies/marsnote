@@ -1,25 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime;
 
 namespace MarsNote
 {
     public static class FileHelper
     {
         /// <summary>
+        /// The default name of the save file.
+        /// </summary>
+        public const string DefaultSaveFileName = "mn-save.json";
+
+        /// <summary>
+        /// The URL to the GitHub issues page.
+        /// </summary>
+        public const string GitHubIssuesURL = "https://github.com/ACWTechnologiesAdmin/MarsNote/issues";
+
+        /// <summary>
+        /// The URL to the help page.
+        /// </summary>
+        public const string HelpURL = "https://acwtechnologies.co.uk/help/marsnote/?sender=mn";
+
+        /// <summary>
+        /// The URL to the license.
+        /// </summary>
+        public const string LicenseURL = "https://acwtechnologies.co.uk/software/marsnote#license";
+
+        /// <summary>
         /// The default directory for all MarsNote files.
         /// </summary>
         private static readonly string MarsNoteDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\ACW Technologies\MarsNote\";
 
         /// <summary>
-        /// The path to the state file.
+        /// The default location the save file should be saved in, if no other directory is specified.
         /// </summary>
-        public static readonly string StateFileLocation = MarsNoteDirectory + "mn-state.json";
+        public static readonly string DefaultSaveFileLocation = MarsNoteDirectory;
 
         /// <summary>
         /// The path to the settings file.
@@ -32,31 +50,23 @@ namespace MarsNote
         public static readonly string StartupFileLocation = MarsNoteDirectory + "startup.acwmn";
 
         /// <summary>
-        /// The URL to the license.
+        /// The path to the state file.
         /// </summary>
-        public const string LicenseURL = "https://acwtechnologies.co.uk/software/marsnote#license";
-
-        /// <summary>
-        /// The URL to the help page.
-        /// </summary>
-        public const string HelpURL = "https://acwtechnologies.co.uk/help/marsnote/?sender=mn";
-
-        /// <summary>
-        /// The URL to the GitHub issues page.
-        /// </summary>
-        public const string GitHubIssuesURL = "https://github.com/ACWTechnologiesAdmin/MarsNote/issues";
-
-        /// <summary>
-        /// The default location the save file should be saved in, if no other directory is specified.
-        /// </summary>
-        public static readonly string DefaultSaveFileLocation = MarsNoteDirectory;
-
-        /// <summary>
-        /// The default name of the save file.
-        /// </summary>
-        public const string DefaultSaveFileName = "mn-save.json";
+        public static readonly string StateFileLocation = MarsNoteDirectory + "mn-state.json";
 
         private static string _saveFileLocation;
+
+        static FileHelper()
+        {
+            // Create the default MarsNote directory if it does not already exist
+            if (!Directory.Exists(MarsNoteDirectory)) { Directory.CreateDirectory(MarsNoteDirectory); }
+            LoadSaveFileLocation();
+        }
+
+        /// <summary>
+        /// An order direction of ascending or descending.
+        /// </summary>
+        public enum OrderType { Ascending, Descending }
 
         /// <summary>
         /// The location of the save file.
@@ -72,123 +82,10 @@ namespace MarsNote
             {
                 // Set the value only if the directory exists
                 if (Directory.Exists(value))
+                {
                     _saveFileLocation = value;
-            }
-        }
-
-        static FileHelper()
-        {
-            // Create the default MarsNote directory if it does not already exist
-            if (!Directory.Exists(MarsNoteDirectory)) { Directory.CreateDirectory(MarsNoteDirectory); }
-            LoadSaveFileLocation();
-        }
-
-        /// <summary>
-        /// Load the save file location from the settings file.
-        /// </summary>
-        private static void LoadSaveFileLocation()
-        {
-            // Load settings into 's'
-            Settings s = Settings.Load();
-            // If the save file location stored in 's' exists
-            if (!string.IsNullOrWhiteSpace(s.SaveFileLocation) && Directory.Exists(s.SaveFileLocation))
-            {
-                // Set the location to the location stored in 's'
-                SaveFileLocation = s.SaveFileLocation;
-            }
-            else
-            {
-                // Set the location to default
-                SaveFileLocation = DefaultSaveFileLocation;
-            }
-        }
-
-        /// <summary>
-        /// Saves a collection of serialised <see cref="Profile"/>s to a file.
-        /// </summary>
-        /// <param name="profiles">The profiles to save.</param>
-        /// <param name="path">The file path to save the profiles to.</param>
-        public static void SaveProfiles(IEnumerable<Profile> profiles, string path)
-        {
-            Write(JsonHelper.Serialize(
-                profiles == null
-                ? new Collection<Profile>()
-                : SortProfiles(profiles)),
-            path);
-        }
-
-        /// <summary>
-        /// Reads all text of a file.
-        /// </summary>
-        /// <param name="path">The path of the file to read.</param>
-        public static string ReadAllText(string path)
-        {
-            return File.ReadAllText(path);
-        }
-
-        /// <summary>
-        /// Reads all lines of a file.
-        /// </summary>
-        /// <param name="path">The path of the file to read.</param>
-        public static string[] ReadAllLines(string path)
-        {
-            return File.ReadAllLines(path);
-        }
-
-        /// <summary>
-        /// Writes the specified contents to a file.
-        /// </summary>
-        /// <param name="contents">The contents of the file to be written.</param>
-        /// <param name="path">The path to the file to write to.</param>
-        /// <param name="append">Whether or not to append the contents to the file.</param>
-        public static void Write(string contents, string path, bool append = false)
-        {
-            if (contents == null)
-            {
-                return;
-            }
-
-            // If the file does not exist
-            if (!File.Exists(path))
-            {
-                FileStream fs = null;
-                try
-                {
-                    // Create the file (and the directory if it does not exist)
-                    fs = CreateFileAndDirectory(path);
-                }
-                finally
-                {
-                    fs?.Close();
                 }
             }
-
-            if (append)
-            {
-                // Append the contents to the file
-                File.AppendAllText(path, contents);
-            }
-            else
-            {
-                // Write the contents to the file
-                File.WriteAllText(path, contents);
-            }
-        }
-
-        /// <summary>
-        /// Checks if a specified directory contains a save file.
-        /// </summary>
-        /// <param name="path">The directory to check.</param>
-        public static bool FolderContainsSaveFile(string path)
-        {
-            if (Directory.Exists(path))
-            {
-                if (File.Exists(Path.Combine(path, Path.GetFileName(SaveFileLocation))))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         /// <summary>
@@ -209,48 +106,97 @@ namespace MarsNote
 
             return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
         }
-        
+
         /// <summary>
-        /// Sorts a collection of profiles and returns the new sorted collection.
+        /// Creates all directories and subdirectories unless they already exist and creates or overwrites a file in the specified path.
         /// </summary>
-        /// <param name="profiles">The collection of profiles to sort.</param>
-        private static ObservableCollection<Profile> SortProfiles(IEnumerable<Profile> profiles)
+        /// <param name="path">The full path of the file.</param>
+        public static FileStream CreateFileAndDirectory(string path)
         {
-            var profilesDeepClone = new ObservableCollection<Profile>(JsonHelper.DeepClone(profiles));
+            if (path == null) { throw new ArgumentNullException(nameof(path)); }
+            else if (string.IsNullOrWhiteSpace(path)) { throw new ArgumentException("Path cannot be empty.", nameof(path)); }
 
-            if (profilesDeepClone.Count == 0) { return profilesDeepClone; }
-            else if (profilesDeepClone.Count > 1)
-            {
-                // Sort Profiles
-                profilesDeepClone = profilesDeepClone.Sort(nameof(Profile.Name), OrderType.Ascending);
-            }
-
-            foreach (Profile profile in profilesDeepClone)
-            {
-                if (profile.Folders.Count == 0) { continue; }
-                else if (profile.Folders.Count > 1)
-                {
-                    // Sort Folders
-                    profile.Folders = profile.Folders.Sort(nameof(Folder.Name), OrderType.Ascending);
-                }
-
-                foreach (Folder folder in profile.Folders)
-                {
-                    if (folder.Notes.Count > 1)
-                    {
-                        // Sort notes
-                        folder.Notes = folder.Notes.Sort(nameof(Note.LastModified), OrderType.Descending);
-                    }
-                }
-            }
-
-            return profilesDeepClone;
+            string fileName = Path.GetFileName(path);
+            string directory = Path.GetDirectoryName(path);
+            return CreateFileAndDirectory(fileName, directory);
         }
 
         /// <summary>
-        /// An order direction of ascending or descending.
+        /// Creates all directories and subdirectories unless they already exist and creates or overwrites a file in the same path.
         /// </summary>
-        public enum OrderType { Ascending, Descending }
+        /// <param name="fileName">The name of the file.</param>
+        /// <param name="directory">The directory to create.</param>
+        public static FileStream CreateFileAndDirectory(string fileName, string directory)
+        {
+            if (fileName == null) { throw new ArgumentNullException(nameof(fileName)); }
+            else if (string.IsNullOrWhiteSpace(fileName)) { throw new ArgumentException("File name cannot be empty.", nameof(fileName)); }
+
+            if (directory == null) { throw new ArgumentNullException(nameof(directory)); }
+            else if (string.IsNullOrWhiteSpace(directory)) { throw new ArgumentException("Directory cannot be empty.", nameof(directory)); }
+
+            Directory.CreateDirectory(directory);
+
+            string path = directory + (directory.EndsWith("\\") ? string.Empty : "\\") + fileName;
+            return File.Create(path);
+        }
+
+        /// <summary>
+        /// Checks if a specified directory contains a save file.
+        /// </summary>
+        /// <param name="path">The directory to check.</param>
+        public static bool FolderContainsSaveFile(string path)
+        {
+            if (Directory.Exists(path))
+            {
+                if (File.Exists(Path.Combine(path, Path.GetFileName(SaveFileLocation))))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a deserialised collection of profiles from the specified path.
+        /// </summary>
+        /// <param name="path">The path to the file that contains the serialised collection of profiles.</param>
+        public static ObservableCollection<Profile> LoadProfiles(string path)
+        {
+            // Deserialise the file into a collection of profiles, or a new empty collection if that returns null
+            return JsonHelper.DeserializePath<ObservableCollection<Profile>>(path) ?? new ObservableCollection<Profile>();
+        }
+
+        /// <summary>
+        /// Reads all lines of a file.
+        /// </summary>
+        /// <param name="path">The path of the file to read.</param>
+        public static string[] ReadAllLines(string path)
+        {
+            return File.ReadAllLines(path);
+        }
+
+        /// <summary>
+        /// Reads all text of a file.
+        /// </summary>
+        /// <param name="path">The path of the file to read.</param>
+        public static string ReadAllText(string path)
+        {
+            return File.ReadAllText(path);
+        }
+
+        /// <summary>
+        /// Saves a collection of serialised <see cref="Profile"/>s to a file.
+        /// </summary>
+        /// <param name="profiles">The profiles to save.</param>
+        /// <param name="path">The file path to save the profiles to.</param>
+        public static void SaveProfiles(IEnumerable<Profile> profiles, string path)
+        {
+            Write(JsonHelper.Serialize(
+                profiles == null
+                ? new Collection<Profile>()
+                : SortProfiles(profiles)),
+            path);
+        }
 
         /// <summary>
         /// Sorts a collection of type T by a specific property, in either ascending or descending order.
@@ -299,46 +245,100 @@ namespace MarsNote
         }
 
         /// <summary>
-        /// Returns a deserialised collection of profiles from the specified path.
+        /// Writes the specified contents to a file.
         /// </summary>
-        /// <param name="path">The path to the file that contains the serialised collection of profiles.</param>
-        public static ObservableCollection<Profile> LoadProfiles(string path)
+        /// <param name="contents">The contents of the file to be written.</param>
+        /// <param name="path">The path to the file to write to.</param>
+        /// <param name="append">Whether or not to append the contents to the file.</param>
+        public static void Write(string contents, string path, bool append = false)
         {
-            // Deserialise the file into a collection of profiles, or a new empty collection if that returns null
-            return JsonHelper.DeserializePath<ObservableCollection<Profile>>(path) ?? new ObservableCollection<Profile>();
+            if (contents == null)
+            {
+                return;
+            }
+
+            // If the file does not exist
+            if (!File.Exists(path))
+            {
+                FileStream fs = null;
+                try
+                {
+                    // Create the file (and the directory if it does not exist)
+                    fs = CreateFileAndDirectory(path);
+                }
+                finally
+                {
+                    fs?.Close();
+                }
+            }
+
+            if (append)
+            {
+                // Append the contents to the file
+                File.AppendAllText(path, contents);
+            }
+            else
+            {
+                // Write the contents to the file
+                File.WriteAllText(path, contents);
+            }
         }
 
         /// <summary>
-        /// Creates all directories and subdirectories unless they already exist and creates or overwrites a file in the specified path.
+        /// Load the save file location from the settings file.
         /// </summary>
-        /// <param name="path">The full path of the file.</param>
-        public static FileStream CreateFileAndDirectory(string path)
+        private static void LoadSaveFileLocation()
         {
-            if (path == null) { throw new ArgumentNullException(nameof(path)); }
-            else if (string.IsNullOrWhiteSpace(path)) { throw new ArgumentException("Path cannot be empty.", nameof(path)); }
-
-            string fileName = Path.GetFileName(path);
-            string directory = Path.GetDirectoryName(path);
-            return CreateFileAndDirectory(fileName, directory);
+            // Load settings into 's'
+            Settings s = Settings.Load();
+            // If the save file location stored in 's' exists
+            if (!string.IsNullOrWhiteSpace(s.SaveFileLocation) && Directory.Exists(s.SaveFileLocation))
+            {
+                // Set the location to the location stored in 's'
+                SaveFileLocation = s.SaveFileLocation;
+            }
+            else
+            {
+                // Set the location to default
+                SaveFileLocation = DefaultSaveFileLocation;
+            }
         }
 
         /// <summary>
-        /// Creates all directories and subdirectories unless they already exist and creates or overwrites a file in the same path.
+        /// Sorts a collection of profiles and returns the new sorted collection.
         /// </summary>
-        /// <param name="fileName">The name of the file.</param>
-        /// <param name="directory">The directory to create.</param>
-        public static FileStream CreateFileAndDirectory(string fileName, string directory)
+        /// <param name="profiles">The collection of profiles to sort.</param>
+        private static ObservableCollection<Profile> SortProfiles(IEnumerable<Profile> profiles)
         {
-            if (fileName == null) { throw new ArgumentNullException(nameof(fileName)); }
-            else if (string.IsNullOrWhiteSpace(fileName)) { throw new ArgumentException("File name cannot be empty.", nameof(fileName)); }
+            var profilesDeepClone = new ObservableCollection<Profile>(JsonHelper.DeepClone(profiles));
 
-            if (directory == null) { throw new ArgumentNullException(nameof(directory)); }
-            else if (string.IsNullOrWhiteSpace(directory)) { throw new ArgumentException("Directory cannot be empty.", nameof(directory)); }
+            if (profilesDeepClone.Count == 0) { return profilesDeepClone; }
+            else if (profilesDeepClone.Count > 1)
+            {
+                // Sort Profiles
+                profilesDeepClone = profilesDeepClone.Sort(nameof(Profile.Name), OrderType.Ascending);
+            }
 
-            Directory.CreateDirectory(directory);
+            foreach (Profile profile in profilesDeepClone)
+            {
+                if (profile.Folders.Count == 0) { continue; }
+                else if (profile.Folders.Count > 1)
+                {
+                    // Sort Folders
+                    profile.Folders = profile.Folders.Sort(nameof(Folder.Name), OrderType.Ascending);
+                }
 
-            string path = directory + (directory.EndsWith("\\") ? string.Empty : "\\") + fileName;
-            return File.Create(path);
+                foreach (Folder folder in profile.Folders)
+                {
+                    if (folder.Notes.Count > 1)
+                    {
+                        // Sort notes
+                        folder.Notes = folder.Notes.Sort(nameof(Note.LastModified), OrderType.Descending);
+                    }
+                }
+            }
+
+            return profilesDeepClone;
         }
     }
 }
