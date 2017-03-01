@@ -20,16 +20,7 @@ namespace MarsNote
         }
 
         #region FolderListBoxItem
-
-        private void folderListBoxItem_delete_Click(object sender, RoutedEventArgs e)
-        {
-            var folder = GetDataContextFromSender<Folder>(sender);
-            if (folder != null)
-            {
-                (Current.MainWindow as MainWindow)?.DeleteFolder(folder, true);
-            }
-        }
-
+        
         private void folderListBoxItem_rename_Click(object sender, RoutedEventArgs e)
         {
             var folder = GetDataContextFromSender<Folder>(sender);
@@ -47,6 +38,15 @@ namespace MarsNote
             if (folder != null && destinationProfile != null)
             {
                 (Current.MainWindow as MainWindow)?.MoveFolderToAnotherProfile(folder, null, destinationProfile);
+            }
+        }
+
+        private void folderListBoxItem_delete_Click(object sender, RoutedEventArgs e)
+        {
+            var folder = GetDataContextFromSender<Folder>(sender);
+            if (folder != null)
+            {
+                (Current.MainWindow as MainWindow)?.DeleteFolder(folder, true);
             }
         }
 
