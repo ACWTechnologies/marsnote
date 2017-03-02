@@ -17,10 +17,18 @@
                 <ResourceDictionary Source="/Resources/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Value Converters -->
             <local:DateTimeToStringConverter x:Key="DateTimeToStringConverter" />
             <local:NoteNameStringToFontStyleConverter x:Key="NoteNameStringToFontStyleConverter" />
             <local:NoteNameStringToStringConverter x:Key="NoteNameStringToStringConverter" />
             <local:BoolToVisibilityCollapsedConverter x:Key="BoolToVisibilityCollapsedConverter" />
+            <local:BoolToIntConverter x:Key="BoolToIntConverter" />
+            <local:InvertBooleanConverter x:Key="InvertBooleanConverter" />
+            <local:ItemsSourceCountToBoolConverter x:Key="ItemsSourceCountToBoolConverter" />
+            <local:MoveFolderItemsSourceConverter x:Key="MoveFolderItemsSourceConverter" />
+            <local:MoveNoteItemsSourceConverter x:Key="MoveNoteItemsSourceConverter" />
+            <local:MultiBoolToVisibilityCollapsedAllTrueConverter x:Key="MultiBoolToVisibilityCollapsedAllTrueConverter" />
+            <!-- END Value Converters -->
 
             <SolidColorBrush x:Key="PathIconSquareFillNormal" Color="#FF000000" />
             <SolidColorBrush x:Key="PathIconSquareFillMouseOver" Color="#FF000000" />
@@ -79,13 +87,8 @@
 
             <DataTemplate x:Key="FolderListBoxItem" DataType="{x:Type local:Folder}">
                 <DataTemplate.Resources>
-                    <Style x:Key="ShowOnHoverButtonStyle"  TargetType="{x:Type Button}" BasedOn="{StaticResource PathIconSquareButtonStyle}">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type ListBoxItem}},Path=IsMouseOver}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
+                    <Style x:Key="ShowOnHoverButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource PathIconSquareButtonStyle}">
+                        <Setter Property="Visibility" Value="{Binding IsMouseOver, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}, Converter={StaticResource BoolToVisibilityCollapsedConverter}}" />
                     </Style>
                 </DataTemplate.Resources>
                 <Grid>
@@ -94,17 +97,45 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis"/>
-                    <Button x:Name="button_folderListBoxItem_rename" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Width="20" Height="25" Click="button_folderListBoxItem_rename_Click" Style="{StaticResource ShowOnHoverButtonStyle}">
+                    <Grid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem x:Name="menuItem_folderListBoxItem_rename" Header="Rename" Click="folderListBoxItem_rename_Click" />
+                            <MenuItem x:Name="menuItem_folderListBoxItem_pinned" Header="Pinned" IsCheckable="True" IsChecked="{Binding Pinned, Mode=TwoWay}" />
+                            <MenuItem x:Name="menuItem_folderListBoxItem_move" Header="Move to..." Click="folderListBoxItem_move_Click" ItemsSource="{Binding MoveProfiles, Converter={StaticResource MoveFolderItemsSourceConverter}, Mode=OneWay}" >
+                                <MenuItem.ItemContainerStyle>
+                                    <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                        <Setter Property="Header" Value="{Binding Name}"/>
+                                        <Setter Property="IsEnabled" Value="{Binding DataContext.MoveProfiles, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type MenuItem}}, Converter={StaticResource ItemsSourceCountToBoolConverter}, Mode=OneWay}"/>
+                                    </Style>
+                                </MenuItem.ItemContainerStyle>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem x:Name="menuItem_folderListBoxItem_delete" Header="Delete" Click="folderListBoxItem_delete_Click" />
+                        </ContextMenu>
+                    </Grid.ContextMenu>
+                    <Rectangle Grid.Column="0" Grid.ColumnSpan="3" Fill="Transparent" />
+                    <TextBlock Text="{Binding Name}" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" TextTrimming="CharacterEllipsis"/>
+                    <Button x:Name="button_folderListBoxItem_rename" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Width="20" Height="25" Click="folderListBoxItem_rename_Click" Style="{StaticResource ShowOnHoverButtonStyle}">
                         <Button.Content>
                             <Path Width="13" Height="13" Stretch="Fill" Data="F1 M 53.2929,21.2929L 54.7071,22.7071C 56.4645,24.4645 56.4645,27.3137 54.7071,29.0711L 52.2323,31.5459L 44.4541,23.7677L 46.9289,21.2929C 48.6863,19.5355 51.5355,19.5355 53.2929,21.2929 Z M 31.7262,52.052L 23.948,44.2738L 43.0399,25.182L 50.818,32.9601L 31.7262,52.052 Z M 23.2409,47.1023L 28.8977,52.7591L 21.0463,54.9537L 23.2409,47.1023 Z "/>
                         </Button.Content>
                     </Button>
-                    <Button x:Name="button_folderListBoxItem_delete" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="2" Width="20" Height="25" Click="button_folderListBoxItem_delete_Click" Style="{StaticResource ShowOnHoverButtonStyle}">
+                    <Button x:Name="button_folderListBoxItem_delete" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="2" Width="20" Height="25" Click="folderListBoxItem_delete_Click" Style="{StaticResource ShowOnHoverButtonStyle}">
                         <Button.Content>
                             <Path Width="10" Height="13" Stretch="Fill" Data="F1 M 25.3333,23.75L 50.6667,23.75C 51.5411,23.75 51.8541,27.3125 51.8541,27.3125L 24.1458,27.3125C 24.1458,27.3125 24.4589,23.75 25.3333,23.75 Z M 35.625,19.7917L 40.375,19.7917C 40.8122,19.7917 41.9583,20.9378 41.9583,21.375C 41.9583,21.8122 40.8122,22.9584 40.375,22.9584L 35.625,22.9584C 35.1878,22.9584 34.0416,21.8122 34.0416,21.375C 34.0416,20.9378 35.1878,19.7917 35.625,19.7917 Z M 27.7083,28.5L 48.2916,28.5C 49.1661,28.5 49.875,29.2089 49.875,30.0834L 48.2916,53.8334C 48.2916,54.7078 47.5828,55.4167 46.7083,55.4167L 29.2917,55.4167C 28.4172,55.4167 27.7083,54.7078 27.7083,53.8334L 26.125,30.0834C 26.125,29.2089 26.8339,28.5 27.7083,28.5 Z M 30.0833,31.6667L 30.4792,52.25L 33.25,52.25L 32.8542,31.6667L 30.0833,31.6667 Z M 36.4167,31.6667L 36.4167,52.25L 39.5833,52.25L 39.5833,31.6667L 36.4167,31.6667 Z M 43.1458,31.6667L 42.75,52.25L 45.5208,52.25L 45.9167,31.6667L 43.1458,31.6667 Z "/>
                         </Button.Content>
                     </Button>
+                    <Rectangle Width="12" Height="12" HorizontalAlignment="Right" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,5,0">
+                        <Rectangle.Visibility>
+                            <MultiBinding Converter="{StaticResource MultiBoolToVisibilityCollapsedAllTrueConverter}" Mode="OneWay">
+                                <Binding Path="Pinned" Mode="OneWay" />
+                                <Binding Path="IsMouseOver" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type ListBoxItem}}" Converter="{StaticResource InvertBooleanConverter}" Mode="OneWay" />
+                            </MultiBinding>
+                        </Rectangle.Visibility>
+                        <Rectangle.Fill>
+                            <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_star}" />
+                        </Rectangle.Fill>
+                    </Rectangle>
                 </Grid>
             </DataTemplate>
 
@@ -114,6 +145,22 @@
                         <ColumnDefinition Width="10" />
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <Grid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem x:Name="menuItem_noteListBoxItem_duplicate" Header="Duplicate" Click="menuItem_noteListBoxItem_duplicate_Click" />
+                            <MenuItem x:Name="menuItem_noteListBoxItem_pinned" Header="Pinned" IsCheckable="True" IsChecked="{Binding Pinned, Mode=TwoWay}" />
+                            <MenuItem x:Name="menuItem_noteListBoxItem_move" Header="Move to..." Click="noteListBoxItem_move_Click" ItemsSource="{Binding MoveFolders, Converter={StaticResource MoveNoteItemsSourceConverter}, Mode=OneWay}">
+                                <MenuItem.ItemContainerStyle>
+                                    <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                        <Setter Property="Header" Value="{Binding Name}"/>
+                                        <Setter Property="IsEnabled" Value="{Binding DataContext.MoveFolders, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type MenuItem}}, Converter={StaticResource ItemsSourceCountToBoolConverter}, Mode=OneWay}"/>
+                                    </Style>
+                                </MenuItem.ItemContainerStyle>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem x:Name="menuItem_noteListBoxItem_delete" Header="Delete" Click="noteListBoxItem_delete_Click" />
+                        </ContextMenu>
+                    </Grid.ContextMenu>
                     <Rectangle Stroke="Transparent" Fill="#FFEDEDED" Grid.Column="1" StrokeThickness="0" />
                     <Rectangle Width="10" Fill="{Binding Colour}" HorizontalAlignment="Left" Grid.RowSpan="3" Grid.Column="0" />
                     <Grid Grid.Column="1" Margin="5">
@@ -126,9 +173,9 @@
                             <RowDefinition Height="15"/>
                             <RowDefinition Height="15"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="{Binding Name, Converter={StaticResource NoteNameStringToStringConverter}}" TextTrimming="CharacterEllipsis" VerticalAlignment="Top" FontStyle="{Binding Name, Converter={StaticResource NoteNameStringToFontStyleConverter}}" Height="16" Foreground="Black" Grid.ColumnSpan="2"/>
+                        <TextBlock Text="{Binding Name, Converter={StaticResource NoteNameStringToStringConverter}}" TextTrimming="CharacterEllipsis" VerticalAlignment="Top" FontStyle="{Binding Name, Converter={StaticResource NoteNameStringToFontStyleConverter}, Mode=OneWay}" Height="16" Foreground="Black" Grid.ColumnSpan="2"/>
                         <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis" VerticalAlignment="Top" FontSize="11" Height="15" Foreground="Black" Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0" />
-                        <Rectangle Width="12" Height="12" HorizontalAlignment="Left" Visibility="{Binding Pinned, Converter={StaticResource BoolToVisibilityCollapsedConverter}}" Grid.Row="2" Grid.Column="0">
+                        <Rectangle Width="12" Height="12" HorizontalAlignment="Left" Visibility="{Binding Pinned, Converter={StaticResource BoolToVisibilityCollapsedConverter}, Mode=OneWay}" Grid.Row="2" Grid.Column="0">
                             <Rectangle.Fill>
                                 <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_star}" />
                             </Rectangle.Fill>

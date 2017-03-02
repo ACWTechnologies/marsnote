@@ -9,5 +9,6 @@
     <ErrorReportUrlHistory>http://acwtechnologies.co.uk/contact-us</ErrorReportUrlHistory>
     <FallbackCulture>en-US</FallbackCulture>
     <VerifyUploadedFiles>true</VerifyUploadedFiles>
+    <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
 </Project>
