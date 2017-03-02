@@ -550,6 +550,7 @@ namespace MarsNote
         private void CancelNotesSearch()
         {
             SearchNotesCollection.CollectionChanged -= SearchNotesCollection_CollectionChanged;
+            SearchNotesCollection.Clear();
             grid_noSearchNotesResults.Visibility = Visibility.Collapsed;
             textBox_searchNotes.Text = string.Empty;
             if (!grid_searchNotes.ChildHasFocus(this)) { SearchNotesOpen = false; }
